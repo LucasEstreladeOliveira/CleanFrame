@@ -328,7 +328,7 @@ try {
   });
   await run('Appearance axes, fonts, scaling and matching materials', async () => {
     await page();
-    for (const bg of ['dark', 'light', 'photo']) for (const layout of ['list', 'dock']) for (const focus of ['type', 'glass']) {
+    for (const bg of ['dark', 'light', 'photo']) for (const layout of ['list', 'dock', 'gallery']) for (const focus of ['type', 'glass']) {
       await look({ bg, layout, focus }); const s = await state();
       check('Independent axes ' + [bg, layout, focus].join('/'), s.look.bg === bg && s.look.layout === layout && s.look.focus === focus && s.shown.bg === bg, s.look);
     }
@@ -339,16 +339,16 @@ try {
     for (const font of fonts) {
       await look({ font }); check('Font ' + font + ' settles', (await state()).look.font === font && (await state()).shown.font === font);
       if (font === 'newsreader') {
-        for (const layout of ['list', 'dock']) for (const controls of ['icons', 'both', 'text']) {
+        for (const layout of ['list', 'dock', 'gallery']) for (const controls of ['icons', 'both', 'text']) {
           await look({ layout, controls });
-          const wrong = await current.evaluate(() => [...document.querySelectorAll('.home .clock, .home .u, .home .u-label, .home .ph-name, .home .tile .label, .home .app-focus-name, .home .util-focus-label, .home .wall-keep')].filter(e => !/Newsreader/.test(getComputedStyle(e).fontFamily)).map(e => ({ cls: e.className, font: getComputedStyle(e).fontFamily })));
+          const wrong = await current.evaluate(() => [...document.querySelectorAll('.home .clock, .home .u, .home .u-label, .home .ph-name, .home .tile .label, .home .app-focus-name, .home .util-focus-label, .home .cap-date, .home .greeting, .home .wall-keep')].filter(e => !/Newsreader/.test(getComputedStyle(e).fontFamily)).map(e => ({ cls: e.className, font: getComputedStyle(e).fontFamily })));
           check('Newsreader covers Home text ' + layout + '/' + controls, wrong.length === 0, wrong);
         }
       }
     }
     await look({ font: 'manrope' });
     for (const wall of walls) { await look({ wall: wall.id }); check('Wallpaper ' + wall.id + ' has matching bundle', (await state()).shown.wall === wall.id && (await state()).wallpaper === wall.id); }
-    for (const layout of ['list', 'dock']) for (const width of [1920, 1280]) {
+    for (const layout of ['list', 'dock', 'gallery']) for (const width of [1920, 1280]) {
       await current.setViewportSize({ width, height: width * 9 / 16 }); await look({ layout });
       await current.waitForFunction(w => Math.abs(document.getElementById('stage').getBoundingClientRect().width - w) < 1, width);
       const g = await current.evaluate(() => { const b = document.getElementById('stage').getBoundingClientRect(); return { x: b.x, y: b.y, width: b.width, height: b.height, focus: ShoreQA.where().focusCount }; });
@@ -359,13 +359,40 @@ try {
     check('No prototype lab controls in production', await current.evaluate(() => !document.querySelector('[data-lab], #lab, #side') && !document.querySelector('script[src*="prototype"]')));
     const before = (await state()).look; await current.reload(); await ready(); check('Appearance survives reload', same((await state()).look, before));
   });
+  await run('Cinematic Gallery layout', async () => {
+    await page(); await look({ bg: 'photo', layout: 'gallery', apps: 'both', focus: 'glass' });
+    const g = await current.evaluate(() => {
+      const q = s => document.querySelector(s), stage = document.getElementById('stage');
+      return { classes: [...stage.classList], tiles: document.querySelectorAll('#track .tile').length, mat: getComputedStyle(q('.mat')).display,
+        greeting: q('#greeting').textContent, greetingOn: q('#greeting').classList.contains('is-on'), date: q('.cap-date') && q('.cap-date').textContent,
+        ampm: q('.clock .ampm') && q('.clock .ampm').textContent, labels: document.querySelectorAll('#track .tile .label').length, text: document.getElementById('home').innerText };
+    });
+    check('Gallery renders as an icon-only Dock variant', g.classes.includes('l-gallery') && g.classes.includes('l-dock') && g.classes.includes('a-icons') && g.classes.includes('m-none') && g.labels === 0, g.classes);
+    check('Gallery shows every Home app in one row', g.tiles === PRIMARY.length, g.tiles);
+    check('Gallery has no glass card', g.mat === 'none', g.mat);
+    check('Gallery shows date, AM/PM and a local greeting', /^[A-Z][a-z]+day, [A-Z][a-z]+ \d{1,2}, \d{4}$/.test(g.date) && /^(AM|PM)$/.test(g.ampm) && /^Good (morning|afternoon|evening)$/.test(g.greeting) && g.greetingOn, g);
+    check('Gallery invents no weather or location', !/°|weather|clear skies|temperature/i.test(g.text), g.text);
+    check('Gallery keeps the stored apps choice', (await state()).look.apps === 'both');
+    await nav('up');
+    check('Greeting yields while a control has focus', await current.evaluate(() => !document.getElementById('greeting').classList.contains('is-on') && ShoreQA.where().zone === 'util'), await current.evaluate(() => ShoreQA.where()));
+    await nav('down');
+    check('Greeting returns with app focus', await current.evaluate(() => document.getElementById('greeting').classList.contains('is-on') && ShoreQA.where().zone === 'apps'));
+    await nav('right', 'right');
+    const f = await current.evaluate(() => { const t = document.querySelector('#track .tile.is-focus'), n = document.getElementById('appFocusName'); return { n: document.querySelectorAll('#track .tile.is-focus').length, name: t && t.getAttribute('aria-label'), label: n.textContent, on: n.classList.contains('is-on') }; });
+    check('Gallery focus is single and names the app', f.n === 1 && f.on && f.label === f.name, f);
+    await current.waitForTimeout(450); // let the Dock-to-Gallery tile slide finish
+    const r = await current.evaluate(() => { const rects = [...document.querySelectorAll('#track .tile')].map(t => t.getBoundingClientRect()), st = document.getElementById('stage').getBoundingClientRect(); return { inside: rects.every(b => b.left >= st.left + 96 && b.right <= st.right - 96 && b.bottom <= st.bottom - 54), overlap: rects.some((b, i) => i && b.left < rects[i - 1].right - 1) }; });
+    check('Gallery dock stays in the safe area without overlap', r.inside && !r.overlap, r);
+    await look({ layout: 'dock' });
+    check('Dock is unchanged after leaving Gallery', (await state()).look.layout === 'dock' && await current.evaluate(() => getComputedStyle(document.querySelector('.mat')).display !== 'none' && !document.getElementById('greeting').classList.contains('is-on')));
+  });
   await run('Settings overview and visible choices', async () => {
     await page(); await scene('settings');
     const expected = ['settings.group.background', 'settings.group.layout', 'settings.group.typography', 'settings.group.focus', 'settings.editor', 'settings.group.samsung'];
     check('Overview has all six settings groups', same((await call('actions')).filter(a => expected.includes(a)).sort(), expected.slice().sort()));
     const specs = {
       background: { bg: ['dark', 'light', 'photo'] },
-      layout: { layout: ['list', 'dock'], apps: ['icons', 'both', 'text'], controls: ['icons', 'both', 'text'] },
+      layout: { layout: ['list', 'dock', 'gallery'], apps: ['icons', 'both', 'text'], controls: ['icons', 'both', 'text'] },
       typography: { font: (await state()).fonts.available },
       focus: { focus: ['type', 'glass'], material: ['soft', 'frost', 'tint'] }
     };
@@ -434,7 +461,7 @@ try {
     await page();
     const specs = [
       ['background', 'bg', ['dark', 'light', 'photo']],
-      ['layout', 'layout', ['list', 'dock']],
+      ['layout', 'layout', ['list', 'gallery', 'dock']],
       ['layout', 'apps', ['icons', 'text', 'both']],
       ['layout', 'controls', ['text', 'both', 'icons']],
       ['typography', 'font', (await state()).fonts.available],
