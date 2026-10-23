@@ -5,7 +5,8 @@
     stremio: 'IkWsFHtOY9.Stremio', netflix: 'org.tizen.netflix-app',
     disneyplus: 'MCmYXNxgcu.DisneyPlus', youtube: '9Ur5IzDKqV.TizenYouTube',
     appletv: 'com.samsung.tv.aria-video', primevideo: 'org.tizen.primevideo',
-    abciview: 'mWK87Xghap.ABCiview', sbs: 'OyE7OuxlUi.SBSOnDemand',
+    /* TODO: replace the placeholders with your TV's real app IDs. */
+    hbomax: 'REPLACEME0.HBOMax', crunchyroll: 'REPLACEME0.Crunchyroll',
     applemusic: 'org.tizen.apple.apple-music'
   };
   var STREAMING = ['as6cYRgkPy.Binge', '73iTZRTc34.Stan', '5b8c3eb16b.BeamCTVDev',

@@ -20,8 +20,10 @@
     { id: 'youtube', name: 'YouTube', mark: true, appId: '9Ur5IzDKqV.TizenYouTube' },
     { id: 'appletv', name: 'Apple TV', mark: true, appId: 'com.samsung.tv.aria-video' },
     { id: 'primevideo', name: 'Prime Video', mark: true, appId: 'org.tizen.primevideo' },
-    { id: 'abciview', name: 'ABC iview', mark: true, appId: 'mWK87Xghap.ABCiview' },
-    { id: 'sbs', name: 'SBS On Demand', mark: true, appId: 'OyE7OuxlUi.SBSOnDemand' },
+    /* TODO: replace both placeholder appIds with the IDs from your TV (see device.js). */
+    { id: 'hbomax', name: 'HBO Max', mark: true, appId: 'REPLACEME0.HBOMax' },
+    /* No crunchyroll.svg in assets/icons yet, so this tile is text-only until one is added and mark is set to true. */
+    { id: 'crunchyroll', name: 'Crunchyroll', mark: false, appId: 'REPLACEME0.Crunchyroll' },
     { id: 'applemusic', name: 'Apple Music', mark: true, appId: 'org.tizen.apple.apple-music' }
   ];
   var PRIMARY = PRIMARY_APPS.map(function (a) { return a.id; }), APPS = PRIMARY_APPS.slice(), ALPHA = [];
