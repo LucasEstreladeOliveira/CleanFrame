@@ -1,0 +1,611 @@
+{
+  "projectDir": "/Users/lucasestrela/Documents/Projects/CleanFrame/app",
+  "deploys": {
+    "next": [
+      {
+        "path": "Debug/projects/app/assets/adaptive-ink.js",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/font-catalog.js",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/fonts.css",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/fonts/geist/Geist-Variable.ttf",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/fonts/geist/OFL.txt",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/fonts/newsreader/Newsreader-Variable.ttf",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/fonts/newsreader/OFL.txt",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/fonts/SOURCES.json",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/ADDITIONAL-SOURCES.json",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/PHOTO-CREDIT.md",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/abciview.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/applemusic.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/appletv.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/apps.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/art.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/AUSTRALIAN-TV-ICONS-LICENSE.txt",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/crunchyroll.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/CUSTOM-BRAND-ICONS-LICENSE.txt",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/disneyplus.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/hbomax.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/home.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/metrics.js",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/netflix.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/primevideo.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/README.md",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/sbs.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/settings.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/SIMPLE-ICONS-LICENSE.txt",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/SOURCES.json",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/spotify.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/stremio.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/tubi.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/icons/youtube.svg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/manrope-OFL.txt",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/manrope.woff2",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/alpine-field-blur.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/alpine-field-clear.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/alpine-field-frost.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/alpine-study-soft.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/amber-field-blur.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/amber-field-clear.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/amber-field-frost.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/amber-study-soft.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/bridge-field-blur.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/bridge-field-clear.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/bridge-field-frost.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/bridge-study-soft.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/cove-field-blur.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/cove-field-clear.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/cove-field-frost.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/cove-study-soft.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/forest-field-blur.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/forest-field-clear.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/forest-field-frost.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/forest-study-soft.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/goldcoast-field-blur.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/goldcoast-field-clear.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/goldcoast-field-frost.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/goldcoast-study-soft.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/golden-field-blur.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/golden-field-clear.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/golden-field-frost.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/golden-study-soft.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/mint-field-blur.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/mint-field-clear.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/mint-field-frost.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/mint-study-soft.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/misty-field-blur.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/misty-field-clear.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/misty-field-frost.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/misty-study-soft.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/night-field-blur.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/night-field-clear.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/night-field-frost.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/night-study-soft.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/peaks-field-blur.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/peaks-field-clear.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/peaks-field-frost.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/peaks-study-soft.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/ridge-field-blur.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/ridge-field-clear.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/ridge-field-frost.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/ridge-study-soft.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/summit-field-blur.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/summit-field-clear.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/summit-field-frost.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/summit-study-soft.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/sydney-field-blur.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/sydney-field-clear.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/sydney-field-frost.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/sydney-study-soft.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/valley-field-blur.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/valley-field-clear.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/valley-field-frost.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/materials/valley-study-soft.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/private-fonts.css",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/typefaces.css",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/alpine-panel.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/alpine-thumb.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/alpine.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/amber-panel.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/amber-thumb.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/amber.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/bridge-panel.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/bridge-thumb.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/bridge.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/catalog.js",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/cove-panel.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/cove-thumb.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/cove.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/forest-panel.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/forest-thumb.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/forest.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/goldcoast-panel.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/goldcoast-thumb.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/goldcoast.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/golden-panel.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/golden-thumb.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/golden.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/mint-panel.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/mint-thumb.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/mint.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/misty-panel.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/misty-thumb.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/misty.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/night-panel.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/night-thumb.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/night.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/peaks-panel.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/peaks-thumb.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/peaks.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/README.md",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/ridge-panel.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/ridge-thumb.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/ridge.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/SOURCES.json",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/summit-panel.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/summit-thumb.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/summit.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/sydney-panel.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/sydney-thumb.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/sydney.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/valley-panel.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/valley-thumb.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/assets/wallpapers/valley.jpg",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/config.xml",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/device.js",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/icon.png",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/index.html",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/main.js",
+        "type": "add"
+      },
+      {
+        "path": "Debug/projects/app/style.css",
+        "type": "add"
+      }
+    ]
+  }
+}

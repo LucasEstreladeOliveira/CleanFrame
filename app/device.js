@@ -6,7 +6,7 @@
     disneyplus: 'MCmYXNxgcu.DisneyPlus', youtube: '9Ur5IzDKqV.TizenYouTube',
     appletv: 'com.samsung.tv.aria-video', primevideo: 'org.tizen.primevideo',
     /* TODO: replace the placeholders with your TV's real app IDs. */
-    hbomax: 'REPLACEME0.HBOMax', crunchyroll: 'REPLACEME0.Crunchyroll',
+    hbomax: '5b8c3eb16b.BeamCTVDev', crunchyroll: 'OGLLvqej7u.CrunchyrollWebApp',
     applemusic: 'org.tizen.apple.apple-music'
   };
   var STREAMING = ['as6cYRgkPy.Binge', '73iTZRTc34.Stan', '5b8c3eb16b.BeamCTVDev',

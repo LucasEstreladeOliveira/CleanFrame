@@ -1,3 +1,5 @@
+/// <reference path="../../index.d.ts" />
+
 /* CleanFrame Home. Static materials, local preferences and public Tizen app controls. */
 (function () {
   'use strict';
@@ -21,9 +23,9 @@
     { id: 'appletv', name: 'Apple TV', mark: true, appId: 'com.samsung.tv.aria-video' },
     { id: 'primevideo', name: 'Prime Video', mark: true, appId: 'org.tizen.primevideo' },
     /* TODO: replace both placeholder appIds with the IDs from your TV (see device.js). */
-    { id: 'hbomax', name: 'HBO Max', mark: true, appId: 'REPLACEME0.HBOMax' },
+    { id: 'hbomax', name: 'HBO Max', mark: true, appId: '5b8c3eb16b.BeamCTVDev' },
     /* No crunchyroll.svg in assets/icons yet, so this tile is text-only until one is added and mark is set to true. */
-    { id: 'crunchyroll', name: 'Crunchyroll', mark: false, appId: 'REPLACEME0.Crunchyroll' },
+    { id: 'crunchyroll', name: 'Crunchyroll', mark: true, appId: 'OGLLvqej7u.CrunchyrollWebApp' },
     { id: 'applemusic', name: 'Apple Music', mark: true, appId: 'org.tizen.apple.apple-music' }
   ];
   var PRIMARY = PRIMARY_APPS.map(function (a) { return a.id; }), APPS = PRIMARY_APPS.slice(), ALPHA = [];

@@ -1,0 +1,208 @@
+# Project type [web_app, test_runner]
+project_type: web_app
+
+# Default profile, Tizen API version
+profile: tv-samsung
+api_version: "6.5"
+
+# Build type [Debug/ Release/ Test]
+build_type: Debug
+
+# Output name for application
+output_name: FrameHome
+
+# Output path for build
+output_path: ""
+
+# Enable size optimization of wgt for web workspace
+opt: false
+
+# Signing profile to be used for Tizen package signing
+# If value is empty: "", active signing profile will be used
+# Else If value is ".", default signing profile will be used
+signing_profile: ""
+
+# list of certs in web project (.trust-anchor)
+trust_anchor: []
+
+# list of files in web project (.html,.css etc) and resources
+files:
+  - assets/PHOTO-CREDIT.md
+  - assets/adaptive-ink.js
+  - assets/font-catalog.js
+  - assets/fonts.css
+  - assets/fonts/SOURCES.json
+  - assets/fonts/geist/Geist-Variable.ttf
+  - assets/fonts/geist/OFL.txt
+  - assets/fonts/newsreader/Newsreader-Variable.ttf
+  - assets/fonts/newsreader/OFL.txt
+  - assets/icons/ADDITIONAL-SOURCES.json
+  - assets/icons/AUSTRALIAN-TV-ICONS-LICENSE.txt
+  - assets/icons/CUSTOM-BRAND-ICONS-LICENSE.txt
+  - assets/icons/README.md
+  - assets/icons/SIMPLE-ICONS-LICENSE.txt
+  - assets/icons/SOURCES.json
+  - assets/icons/abciview.svg
+  - assets/icons/applemusic.svg
+  - assets/icons/appletv.svg
+  - assets/icons/apps.svg
+  - assets/icons/art.svg
+  - assets/icons/crunchyroll.svg
+  - assets/icons/disneyplus.svg
+  - assets/icons/hbomax.svg
+  - assets/icons/home.svg
+  - assets/icons/metrics.js
+  - assets/icons/netflix.svg
+  - assets/icons/primevideo.svg
+  - assets/icons/sbs.svg
+  - assets/icons/settings.svg
+  - assets/icons/spotify.svg
+  - assets/icons/stremio.svg
+  - assets/icons/tubi.svg
+  - assets/icons/youtube.svg
+  - assets/manrope-OFL.txt
+  - assets/manrope.woff2
+  - assets/materials/alpine-field-blur.jpg
+  - assets/materials/alpine-field-clear.jpg
+  - assets/materials/alpine-field-frost.jpg
+  - assets/materials/alpine-study-soft.jpg
+  - assets/materials/amber-field-blur.jpg
+  - assets/materials/amber-field-clear.jpg
+  - assets/materials/amber-field-frost.jpg
+  - assets/materials/amber-study-soft.jpg
+  - assets/materials/bridge-field-blur.jpg
+  - assets/materials/bridge-field-clear.jpg
+  - assets/materials/bridge-field-frost.jpg
+  - assets/materials/bridge-study-soft.jpg
+  - assets/materials/cove-field-blur.jpg
+  - assets/materials/cove-field-clear.jpg
+  - assets/materials/cove-field-frost.jpg
+  - assets/materials/cove-study-soft.jpg
+  - assets/materials/forest-field-blur.jpg
+  - assets/materials/forest-field-clear.jpg
+  - assets/materials/forest-field-frost.jpg
+  - assets/materials/forest-study-soft.jpg
+  - assets/materials/goldcoast-field-blur.jpg
+  - assets/materials/goldcoast-field-clear.jpg
+  - assets/materials/goldcoast-field-frost.jpg
+  - assets/materials/goldcoast-study-soft.jpg
+  - assets/materials/golden-field-blur.jpg
+  - assets/materials/golden-field-clear.jpg
+  - assets/materials/golden-field-frost.jpg
+  - assets/materials/golden-study-soft.jpg
+  - assets/materials/mint-field-blur.jpg
+  - assets/materials/mint-field-clear.jpg
+  - assets/materials/mint-field-frost.jpg
+  - assets/materials/mint-study-soft.jpg
+  - assets/materials/misty-field-blur.jpg
+  - assets/materials/misty-field-clear.jpg
+  - assets/materials/misty-field-frost.jpg
+  - assets/materials/misty-study-soft.jpg
+  - assets/materials/night-field-blur.jpg
+  - assets/materials/night-field-clear.jpg
+  - assets/materials/night-field-frost.jpg
+  - assets/materials/night-study-soft.jpg
+  - assets/materials/peaks-field-blur.jpg
+  - assets/materials/peaks-field-clear.jpg
+  - assets/materials/peaks-field-frost.jpg
+  - assets/materials/peaks-study-soft.jpg
+  - assets/materials/ridge-field-blur.jpg
+  - assets/materials/ridge-field-clear.jpg
+  - assets/materials/ridge-field-frost.jpg
+  - assets/materials/ridge-study-soft.jpg
+  - assets/materials/summit-field-blur.jpg
+  - assets/materials/summit-field-clear.jpg
+  - assets/materials/summit-field-frost.jpg
+  - assets/materials/summit-study-soft.jpg
+  - assets/materials/sydney-field-blur.jpg
+  - assets/materials/sydney-field-clear.jpg
+  - assets/materials/sydney-field-frost.jpg
+  - assets/materials/sydney-study-soft.jpg
+  - assets/materials/valley-field-blur.jpg
+  - assets/materials/valley-field-clear.jpg
+  - assets/materials/valley-field-frost.jpg
+  - assets/materials/valley-study-soft.jpg
+  - assets/private-fonts.css
+  - assets/typefaces.css
+  - assets/wallpapers/README.md
+  - assets/wallpapers/SOURCES.json
+  - assets/wallpapers/alpine-panel.jpg
+  - assets/wallpapers/alpine-thumb.jpg
+  - assets/wallpapers/alpine.jpg
+  - assets/wallpapers/amber-panel.jpg
+  - assets/wallpapers/amber-thumb.jpg
+  - assets/wallpapers/amber.jpg
+  - assets/wallpapers/bridge-panel.jpg
+  - assets/wallpapers/bridge-thumb.jpg
+  - assets/wallpapers/bridge.jpg
+  - assets/wallpapers/catalog.js
+  - assets/wallpapers/cove-panel.jpg
+  - assets/wallpapers/cove-thumb.jpg
+  - assets/wallpapers/cove.jpg
+  - assets/wallpapers/forest-panel.jpg
+  - assets/wallpapers/forest-thumb.jpg
+  - assets/wallpapers/forest.jpg
+  - assets/wallpapers/goldcoast-panel.jpg
+  - assets/wallpapers/goldcoast-thumb.jpg
+  - assets/wallpapers/goldcoast.jpg
+  - assets/wallpapers/golden-panel.jpg
+  - assets/wallpapers/golden-thumb.jpg
+  - assets/wallpapers/golden.jpg
+  - assets/wallpapers/mint-panel.jpg
+  - assets/wallpapers/mint-thumb.jpg
+  - assets/wallpapers/mint.jpg
+  - assets/wallpapers/misty-panel.jpg
+  - assets/wallpapers/misty-thumb.jpg
+  - assets/wallpapers/misty.jpg
+  - assets/wallpapers/night-panel.jpg
+  - assets/wallpapers/night-thumb.jpg
+  - assets/wallpapers/night.jpg
+  - assets/wallpapers/peaks-panel.jpg
+  - assets/wallpapers/peaks-thumb.jpg
+  - assets/wallpapers/peaks.jpg
+  - assets/wallpapers/ridge-panel.jpg
+  - assets/wallpapers/ridge-thumb.jpg
+  - assets/wallpapers/ridge.jpg
+  - assets/wallpapers/summit-panel.jpg
+  - assets/wallpapers/summit-thumb.jpg
+  - assets/wallpapers/summit.jpg
+  - assets/wallpapers/sydney-panel.jpg
+  - assets/wallpapers/sydney-thumb.jpg
+  - assets/wallpapers/sydney.jpg
+  - assets/wallpapers/valley-panel.jpg
+  - assets/wallpapers/valley-thumb.jpg
+  - assets/wallpapers/valley.jpg
+  - device.js
+  - icon.png
+  - index.html
+  - main.js
+  - style.css
+
+# list of files to exclude based on the matched patterns
+excludes:
+  - Build/*
+  - Debug/*
+  - Directory.Build.targets
+  - Release/*
+  - Test/*
+  - \.Build/.*
+  - \.buildResult/.*
+  - \.csproj
+  - \.externalToolBuilders/.*
+  - \.gn
+  - \.obj/.*
+  - \.package/.*
+  - \.project
+  - \.rds_delta
+  - \.sdk_delta.info
+  - \.settings/.*
+  - \.sign/.*
+  - \.tizen-ui-builder-tool.xml
+  - \.tproject
+  - \.wgt
+  - tizen_web_project.yaml
+  - webUnitTest/*
+
+# project dependencies
+deps: []
+
