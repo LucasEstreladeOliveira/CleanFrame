@@ -9,7 +9,7 @@ with urllib.request.urlopen('http://'+host+':8001/api/v2/',timeout=4) as respons
 # query/inspect output the owner has reviewed on the real TV; add yours to APPLY_MODELS only then.
 REFERENCE_MODEL='QA55LS03DAWXXY'
 READ_ONLY_MODELS={REFERENCE_MODEL,'QN55LS03FAGXZD'}
-APPLY_MODELS={REFERENCE_MODEL}
+APPLY_MODELS={REFERENCE_MODEL,'QN55LS03FAGXZD'}
 model=info.get('device',{}).get('modelName')
 if mode in ['query','inspect']:
     if model not in READ_ONLY_MODELS:raise SystemExit('Model guard failed for '+repr(model)+'; nothing staged.')
