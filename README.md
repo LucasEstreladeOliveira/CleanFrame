@@ -33,6 +33,7 @@ The public preview uses the included Manrope, Geist and Newsreader fonts.
 - Choose and reorder Home apps; discover installed apps on the TV.
 - Select from sixteen wallpapers and save your preferences locally.
 - Gallery layout: date and clock, with optional live weather for a place you set in `app/weather-config.js` (Open-Meteo, no key; the launcher's only network request).
+- Gallery layout: an optional Spotify card with the song, album, artist and cover, plus previous, play/pause and next on the remote (set up with `scripts/spotify-auth.py`; see `docs/development.md`).
 
 The glass and blur are rendered ahead of time. The TV loads the finished images and uses transforms and opacity for focus feedback.
 

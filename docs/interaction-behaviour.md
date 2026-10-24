@@ -92,4 +92,14 @@ The reading is real data from [Open-Meteo](https://open-meteo.com/), requested w
 
 A reading is refreshed after 30 minutes and cached locally. If a request fails, the last reading stays visible for up to three hours, retrying at most every five minutes; after that, or if the response is invalid, the widget shows nothing rather than a guess. A reading for different coordinates or units is ignored.
 
+## Spotify
+
+Gallery can show a Spotify card on the right, between the Home controls and the apps: cover, song, artist, album, and previous, play/pause and next buttons. List and Dock never show it, and nothing is requested unless Gallery is the visible Home screen. Without the local sign-in (below) the card does not exist.
+
+On the remote, Up from the apps reaches the buttons (starting on play/pause), Left and Right move between them, OK sends the command, Up again reaches the Home controls, and Down or Back returns to the apps. Commands are sent one at a time, and the card re-reads Spotify about 0.7 seconds later so it shows what Spotify actually did. The card re-reads every 4 seconds while playing and every 10 seconds when paused or idle, and stops when Gallery is not showing.
+
+If nothing is playing the card says so, with a play button. If Spotify answers "Premium required" or "no active device", the card shows that for a few seconds and keeps the song. If the sign-in has expired it shows "Reconnect Spotify" with no buttons, and the buttons cannot be focused. Titles and names are shown as plain text, and a cover is shown only from Spotify's own image hosts. Controls need Spotify Premium and a running Spotify player (the Spotify app on the TV, a phone or a computer); this widget controls that player but does not play audio itself.
+
+Credentials: `python3 scripts/spotify-auth.py --client-id <id>` signs in once with PKCE (no client secret) and writes a refresh token to `.local/spotify.json`. The local preview and `scripts/package.py` substitute `assets/spotify-local.js` from it; the committed copy is disabled, and the public export never includes it. Anyone who can read the installed package can read that token, which can only read and control playback.
+
 Photographic materials and blurred panel backgrounds are generated before packaging and stay aligned with the full-screen image. Photo colour and contrast metadata are also prepared offline. Navigation does not sample image pixels, run an optics engine or apply live backdrop blur. Flat backgrounds use matching light or dark panel colours. Focus feedback uses transforms and opacity; reduced motion removes animated scaling and movement while retaining opacity feedback.

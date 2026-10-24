@@ -59,6 +59,15 @@ For developer access, connect the TV and Mac to the same network, enable Develop
 
 `npm run tv:launch` opens the installed test. It does not change startup defaults. All device scripts use the app identity in `app/config.xml`; changing that identity would create a different application.
 
+## Spotify now playing (optional)
+
+1. Create an app at <https://developer.spotify.com/dashboard>, tick "Web API", and add the Redirect URI `http://127.0.0.1:8888/callback`. Copy its Client ID.
+2. Run `python3 scripts/spotify-auth.py --client-id <your client id>` on your Mac, approve in the browser. It writes `.local/spotify.json` (ignored by git, mode 600).
+3. Rebuild and reinstall (`python3 scripts/package.py`, then your usual install). The manifest gained access entries for `accounts.spotify.com`, `api.spotify.com` and `i.scdn.co`, so the widget must be re-signed. Preview (`scripts/preview.py`) picks the same file up for local testing.
+4. Switch the layout to Gallery. Remove the card by deleting `.local/spotify.json` and rebuilding.
+
+Spotify may limit apps in development mode to a small list of users and to accounts with Premium; add your own account under the app's User Management if it refuses you.
+
 ## Sources
 
 - [Samsung developer connection steps](https://developer.samsung.com/smarttv/develop/getting-started/using-sdk/tv-device.html)

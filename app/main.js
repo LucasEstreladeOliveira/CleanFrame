@@ -73,6 +73,11 @@
     snow: '<path d="M7 14.5h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.1 5.7 4.4 4.4 0 0 0 7 14.5Z"/><path d="M8.5 18h.01M12 19.5h.01M15.5 18h.01M10.2 21h.01M13.8 21h.01"/>',
     storm: '<path d="M7 14.5h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.1 5.7 4.4 4.4 0 0 0 7 14.5Z"/><path d="m12.8 14.5-2.3 3.2h3l-2.3 3.3"/>',
     fog: '<path d="M5 8h14M3 12h18M6 16h12M9 20h6"/>',
+    prev: '<path d="M6 5h2.4v14H6zM19 5.5v13L9.5 12z"/>',
+    next: '<path d="M15.6 5H18v14h-2.4zM5 5.5v13L14.5 12z"/>',
+    play: '<path d="M8 5.5v13l11-6.5z"/>',
+    pause: '<path d="M7 5h3.6v14H7zM13.4 5H17v14h-3.6z"/>',
+    music: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
     pin: '<path d="M12 21s6-5.2 6-10a6 6 0 0 0-12 0c0 4.8 6 10 6 10Z"/><circle cx="12" cy="11" r="2.2"/>',
     undo: '<path d="M9 6 5 10l4 4"/><path d="M5 10h9.5a4.5 4.5 0 0 1 0 9H11"/>',
     check: '<path d="m5.5 12.5 4 4 9-9"/>',
@@ -406,6 +411,171 @@
       + (cfg.place ? '<span class="cap-place">' + icon('pin') + '<span>' + esc(cfg.place) + '</span></span>' : '');
   }
 
+  /* ---------- Spotify now playing (Gallery only) ----------
+     Reads the playback state and sends previous, play/pause and next through the Spotify Web API.
+     The refresh token comes from assets/spotify-local.js, which scripts/spotify-auth.py writes into
+     the package from .local/ and which is never committed. Nothing is shown without a real reading. */
+  var SP_KEY = 'cleanframe.spotify.v1', SP_TIMEOUT = 10000, SP_PLAYING = 4000, SP_QUIET = 10000, SP_BACKOFF = 30000, SP_NOTE = 4000;
+  var sp = { token: '', expires: 0, loading: false, timer: 0, view: null, auth: false, note: '', noteTimer: 0, busy: false, tokenCbs: null };
+  function spConfig() {
+    var c = window.CleanFrameSpotify;
+    if (!c || c.enabled !== true || typeof c.clientId !== 'string' || !/^[A-Za-z0-9]{16,64}$/.test(c.clientId)) return null;
+    if (typeof c.refreshToken !== 'string' || !/^[A-Za-z0-9_.\-]{20,512}$/.test(c.refreshToken)) return null;
+    return c;
+  }
+  function spRefreshToken(c) {
+    var saved;
+    try {
+      saved = JSON.parse(localStorage.getItem(SP_KEY) || 'null');
+      if (saved && saved.client === c.clientId && saved.from === c.refreshToken && typeof saved.token === 'string' && /^[A-Za-z0-9_.\-]{20,512}$/.test(saved.token)) return saved.token;
+    } catch (e) {}
+    return c.refreshToken;
+  }
+  function spSaveRefresh(c, token) {
+    try { localStorage.setItem(SP_KEY, JSON.stringify({ client: c.clientId, from: c.refreshToken, token: token })); } catch (e) {}
+  }
+  function spHttp(method, url, headers, body, cb) {
+    var xhr, done = false;
+    function finish(status, text, retry) {
+      var json = null;
+      if (done) return;
+      done = true;
+      if (text) { try { json = JSON.parse(text); } catch (e) { json = null; } }
+      cb(status, json, retry);
+    }
+    try {
+      xhr = new XMLHttpRequest();
+      xhr.open(method, url, true);
+      xhr.timeout = SP_TIMEOUT;
+      Object.keys(headers).forEach(function (name) { xhr.setRequestHeader(name, headers[name]); });
+      xhr.onload = function () { finish(xhr.status, xhr.responseText, Number(xhr.getResponseHeader('Retry-After')) || 0); };
+      xhr.onerror = xhr.ontimeout = xhr.onabort = function () { finish(0, '', 0); };
+      xhr.send(body);
+    } catch (e) { finish(0, '', 0); }
+  }
+  /* cb(null, token) | cb('auth') | cb('net') */
+  function spToken(cb) {
+    var c = spConfig();
+    if (!c) { cb('auth'); return; }
+    if (sp.token && Date.now() < sp.expires - 30000) { cb(null, sp.token); return; }
+    if (sp.tokenCbs) { sp.tokenCbs.push(cb); return; }
+    sp.tokenCbs = [cb];
+    spHttp('POST', 'https://accounts.spotify.com/api/token', { 'Content-Type': 'application/x-www-form-urlencoded' },
+      'grant_type=refresh_token&client_id=' + encodeURIComponent(c.clientId) + '&refresh_token=' + encodeURIComponent(spRefreshToken(c)), function (status, json) {
+        var waiting = sp.tokenCbs, err = null;
+        sp.tokenCbs = null;
+        if (status === 200 && json && typeof json.access_token === 'string' && json.access_token) {
+          sp.token = json.access_token; sp.expires = Date.now() + (Number(json.expires_in) > 0 ? Number(json.expires_in) : 3600) * 1000;
+          if (typeof json.refresh_token === 'string' && /^[A-Za-z0-9_.\-]{20,512}$/.test(json.refresh_token)) spSaveRefresh(c, json.refresh_token);
+          sp.auth = false;
+        } else { sp.token = ''; err = status === 400 || status === 401 ? 'auth' : 'net'; }
+        waiting.forEach(function (fn) { fn(err, sp.token); });
+      });
+  }
+  /* cb(status, json, retryAfterSeconds); status 0 is a network failure and -1 an expired sign-in. */
+  function spApi(method, path, cb, again) {
+    spToken(function (err, token) {
+      if (err) { cb(err === 'auth' ? -1 : 0, null, 0); return; }
+      spHttp(method, 'https://api.spotify.com/v1' + path, { Authorization: 'Bearer ' + token }, undefined, function (status, json, retry) {
+        if (status === 401 && !again) { sp.token = ''; spApi(method, path, cb, true); return; }
+        cb(status === 401 ? -1 : status, json, retry);
+      });
+    });
+  }
+  function spText(value, max) { return typeof value === 'string' ? value.replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, max) : ''; }
+  function spCover(images) {
+    var best = '', fit = 0;
+    if (!Array.isArray(images)) return '';
+    images.forEach(function (im) {
+      var w = im && Number(im.width) || 0;
+      if (!im || typeof im.url !== 'string' || !/^https:\/\/[a-z0-9.\-]+\.(scdn\.co|spotifycdn\.com)\/[A-Za-z0-9\/_.\-]{1,200}$/.test(im.url)) return;
+      /* Prefer the smallest image that is still sharp at 168px on a 4K panel. */
+      if (!best || (w >= 300 && (fit < 300 || w < fit)) || (w < 300 && fit < 300 && w > fit)) { best = im.url; fit = w; }
+    });
+    return best;
+  }
+  /* Returns a view for a valid reading, or null. An idle account is a valid reading with no track. */
+  function spParse(status, json) {
+    var item, view, artists;
+    if (status === 204) return { idle: true };
+    if (status !== 200 || !json || typeof json !== 'object') return null;
+    item = json.item;
+    if (json.currently_playing_type === 'ad') return { playing: json.is_playing === true, title: 'Advertisement', artist: '', album: '', cover: '' };
+    if (!item || typeof item !== 'object') return { idle: true };
+    view = { playing: json.is_playing === true, title: spText(item.name, 160), artist: '', album: '', cover: '' };
+    if (!view.title) return null;
+    if (Array.isArray(item.artists)) {
+      artists = item.artists.map(function (a) { return a && spText(a.name, 80); }).filter(Boolean);
+      view.artist = artists.slice(0, 3).join(', ');
+    }
+    if (item.album && typeof item.album === 'object') { view.album = spText(item.album.name, 160); view.cover = spCover(item.album.images); }
+    else if (item.show && typeof item.show === 'object') {
+      view.album = spText(item.show.name, 160); view.cover = spCover(item.show.images);
+      if (!view.artist) view.artist = spText(item.show.publisher, 80);
+    }
+    return view;
+  }
+  function spActive() { return !!spConfig() && S.stack && S.c.layout === 'gallery' && top().id === 'home' && !document.hidden; }
+  function spShown() { return !!sp.view && !!spConfig(); }
+  function spControls() { return spShown() && !sp.view.auth; }
+  function spSchedule(ms) { clearTimeout(sp.timer); sp.timer = setTimeout(spPoll, ms); }
+  function spPoll() {
+    sp.timer = 0;
+    if (!spActive() || sp.loading) return;
+    sp.loading = true;
+    spApi('GET', '/me/player?additional_types=episode', function (status, json, retry) {
+      var view = status === -1 ? null : spParse(status, json), wait;
+      sp.loading = false;
+      if (status === -1) { sp.auth = true; sp.view = { auth: true }; wait = SP_BACKOFF; }
+      else if (view) { sp.view = view; wait = view.playing ? SP_PLAYING : SP_QUIET; }
+      else wait = status === 429 ? Math.max(SP_BACKOFF, retry * 1000) : SP_BACKOFF;
+      if (S.stack && sp.view && (top().id === 'home' || isSettingsDetail(top()))) render();
+      spSchedule(wait);
+    });
+  }
+  function ensureSpotify() { if (spActive() && !sp.timer && !sp.loading) spPoll(); }
+  function spNote(text) {
+    sp.note = text; clearTimeout(sp.noteTimer);
+    sp.noteTimer = setTimeout(function () { sp.note = ''; if (S.stack) render(); }, SP_NOTE);
+  }
+  function spCommand(kind) {
+    var playing, req;
+    if (!spControls() || sp.busy) return;
+    playing = !!sp.view.playing;
+    req = kind === 'previous' ? ['POST', '/me/player/previous'] : kind === 'next' ? ['POST', '/me/player/next'] : playing ? ['PUT', '/me/player/pause'] : ['PUT', '/me/player/play'];
+    sp.busy = true;
+    spApi(req[0], req[1], function (status) {
+      sp.busy = false;
+      if (status >= 200 && status < 300) {
+        if (kind === 'toggle' && sp.view && !sp.view.idle) sp.view.playing = !playing;
+        clearTimeout(sp.timer); sp.timer = 0;
+        sp.timer = setTimeout(spPoll, 700);
+      } else if (status === 403) spNote('Controls need Spotify Premium');
+      else if (status === 404) spNote('Open Spotify on a device first');
+      else if (status === 429) spNote('Spotify is busy, try again');
+      else spNote(status === -1 ? 'Spotify sign-in expired' : 'Spotify did not respond');
+      if (S.stack) render();
+    });
+    if (S.stack) render();
+  }
+  var SP_BUTTONS = [['previous', 'prev', 'Previous'], ['toggle', 'play', 'Play or pause'], ['next', 'next', 'Next']];
+  function spotifyHtml(hs) {
+    var v = sp.view, focus = hs.zone === 'media' ? hs.m : -1, status, buttons = '';
+    if (!spShown()) return '';
+    if (v.auth) return '<div class="sp-body"><span class="sp-label">' + icon('music') + '<span>Spotify</span></span><span class="sp-title">Reconnect Spotify</span><span class="sp-artist">Run scripts/spotify-auth.py and reinstall</span></div>';
+    status = sp.note || (v.idle ? 'Nothing playing' : v.playing ? 'Now playing' : 'Paused');
+    SP_BUTTONS.forEach(function (b, i) {
+      var name = b[0] === 'toggle' ? (v.playing ? 'Pause' : 'Play') : b[2];
+      buttons += '<button type="button" tabindex="-1" class="sp-btn sp-' + b[0] + (i === focus ? ' is-focus' : '') + (sp.busy ? ' is-busy' : '') + '" data-z="media" data-i="' + i + '" data-action="spotify.' + b[0] + '" aria-label="' + name + '">'
+        + icon(b[0] === 'toggle' ? (v.playing ? 'pause' : 'play') : b[1]) + '</button>';
+    });
+    return '<div class="sp-art">' + (v.cover ? '<img class="sp-cover" alt="" src="' + esc(v.cover) + '">' : '<span class="sp-blank">' + icon('music') + '</span>') + '</div>'
+      + '<div class="sp-body"><span class="sp-label' + (sp.note ? ' is-note' : '') + '">' + icon('music') + '<span>' + esc(status) + '</span></span>'
+      + (v.idle ? '<span class="sp-title">Spotify</span><span class="sp-artist">Start playing on any device</span>' : '<span class="sp-title">' + esc(v.title) + '</span><span class="sp-artist">' + esc(v.artist) + '</span><span class="sp-album">' + esc(v.album) + '</span>')
+      + '<div class="sp-controls">' + buttons + '</div></div>';
+  }
+  function spAction(i) { spCommand(SP_BUTTONS[i] ? SP_BUTTONS[i][0] : ''); }
+
   /* ---------- Saved preferences ---------- */
   function safeId(id) { return typeof id === 'string' && /^[A-Za-z0-9][A-Za-z0-9._-]{0,160}$/.test(id) && ['constructor', 'prototype', '__proto__'].indexOf(id) < 0; }
   function safeIcon(path) { return typeof path === 'string' && path.length < 2048 && /^(?:\/[^\/]|file:\/\/\/|wgt-package:\/\/\/)/.test(path) ? path : ''; }
@@ -630,17 +800,29 @@
     key: function (t, k) {
       var f = t.f, h = S.c.home, U = utils(), x = axes(), i = ensureSel();
       if (S.c.layout === 'list') { listHomeKey(t, k, i, U); return; }
+      if (f.zone === 'media' && spControls()) {
+        f.m = clamp(f.m || 0, 0, SP_BUTTONS.length - 1);
+        if (k === 'left' && f.m > 0) f.m--;
+        else if (k === 'right' && f.m < SP_BUTTONS.length - 1) f.m++;
+        else if (k === 'up') { f.zone = 'util'; f.u = clamp(S.lastUtil, 0, U.length - 1); }
+        else if (k === 'down' || k === 'back') f.zone = 'apps';
+        else if (k === 'ok') spAction(f.m);
+        return;
+      }
+      if (f.zone === 'media') f.zone = 'apps';
       if (f.zone === 'util') {
         f.u = clamp(f.u, 0, U.length - 1);
         if (k === x.prev && f.u > 0) f.u--;
         else if (k === x.next && f.u < U.length - 1) f.u++;
+        else if (k === x.inn && S.c.layout === 'gallery' && spControls()) { f.zone = 'media'; f.m = 1; }
         else if (k === x.inn || k === 'back') f.zone = 'apps';
         else if (k === 'ok') { S.lastUtil = f.u; utilAction(U[f.u]); return; }
         S.lastUtil = f.u;
         return;
       }
       f.zone = 'apps';
-      if (k === x.out) { f.zone = 'util'; f.u = clamp(S.lastUtil, 0, U.length - 1); }
+      if (k === x.out && S.c.layout === 'gallery' && spControls()) { f.zone = 'media'; f.m = 1; }
+      else if (k === x.out) { f.zone = 'util'; f.u = clamp(S.lastUtil, 0, U.length - 1); }
       else if (k === 'back') openMessage('leave');
       else if (!h.length) { if (k === 'ok') addAppsRoute(); }
       else if (k === x.prev && i > 0) setSel(h[i - 1]);
@@ -649,6 +831,7 @@
     },
     point: function (t, z, i) {
       if (z === 'util') { t.f.zone = 'util'; t.f.u = i; S.lastUtil = i; }
+      else if (z === 'media') { if (!spControls()) return; t.f.zone = 'media'; t.f.m = i; }
       else if (z === 'app') { t.f.zone = 'apps'; setSel(S.c.home[i]); }
       else if (z === 'empty') t.f.zone = 'apps';
       else return;
@@ -1136,9 +1319,9 @@
   }
 
   function homeState(t) {
-    var h = S.c.home, hs = { mode: 'browse', zone: null, i: Math.max(0, ensureSel()), u: -1, lifted: false, from: -1, arr: null, items: h.map(function (id) { return { key: id, kind: 'app', id: id }; }) };
+    var h = S.c.home, hs = { mode: 'browse', zone: null, m: 0, i: Math.max(0, ensureSel()), u: -1, lifted: false, from: -1, arr: null, items: h.map(function (id) { return { key: id, kind: 'app', id: id }; }) };
     if (isSettingsDetail(t)) hs.zone = 'preview';
-    else if (t.id === 'home') { hs.zone = t.f.zone; hs.u = t.f.u; }
+    else if (t.id === 'home') { hs.zone = t.f.zone === 'media' && !spControls() ? 'apps' : t.f.zone; hs.u = t.f.u; hs.m = t.f.m || 0; }
     return hs;
   }
 
@@ -1147,6 +1330,7 @@
     renderCaption(t, hs);
     renderUtils(hs);
     renderGreeting(hs);
+    renderSpotify(hs);
     if (S.c.layout === 'list') renderList(hs);
     else { photoMode = null; renderDock(hs); }
     renderAppFocusName(hs);
@@ -1178,6 +1362,13 @@
     var on = S.c.layout === 'gallery' && hs.mode === 'browse' && hs.zone !== 'util' && hs.zone !== 'ctl';
     greeting.textContent = on ? greetingText(new Date()) : '';
     greeting.className = 'greeting' + (on ? ' is-on' : '');
+  }
+  function renderSpotify(hs) {
+    var el = document.getElementById('spotify'), on;
+    if (S.c.layout === 'gallery') ensureSpotify();
+    on = S.c.layout === 'gallery' && spShown();
+    el.className = 'spotify' + (on ? ' is-on' : '') + (on && sp.view.auth ? ' is-auth' : '');
+    setHTML(el, on ? spotifyHtml(hs) : '');
   }
   function utilBtn(z, i, action, inner, extra, name) {
     return '<button type="button" tabindex="-1" class="u' + (extra || '') + '" data-z="' + z + '" data-i="' + i + '" data-action="' + action + '" aria-label="' + esc(name) + '"><span class="u-content">' + inner + '</span></button>';
@@ -1315,7 +1506,7 @@
     var items = hs.items, n = items.length, empty = hs.mode !== 'arrange' && !n, g = dockGeom(empty ? -1 : n);
     var anchor = clamp(hs.i, 0, Math.max(0, n - 1)), off = empty ? 0 : dockOffset(n, anchor, g);
     var full = hs.arr ? live(hs.arr.slots).length >= CAP : false, ns = hs.arr ? hs.arr.slots.length : n;
-    var tileFocus = hs.zone === 'apps' || hs.zone === 'tiles', tileSel = hs.zone === 'util' || hs.zone === 'act' || hs.zone === 'ctl' || hs.zone === 'preview';
+    var tileFocus = hs.zone === 'apps' || hs.zone === 'tiles', tileSel = hs.zone === 'util' || hs.zone === 'act' || hs.zone === 'ctl' || hs.zone === 'preview' || hs.zone === 'media';
     var focusItem = items[anchor], s, ax, label, width;
 
     dock.className = 'dock' + (empty ? ' is-empty' : '');
