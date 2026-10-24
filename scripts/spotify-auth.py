@@ -100,6 +100,10 @@ def main():
     parser.add_argument('--client-id', required=True, help='Client ID of your Spotify developer app')
     parser.add_argument('--port', type=int, default=8888)
     args = parser.parse_args()
+    args.client_id = args.client_id.strip().strip('\'"<>')
+    if not re.fullmatch(r'[0-9a-f]{32}', args.client_id):
+        raise SystemExit('That is not a Spotify Client ID. It is exactly 32 letters and digits (0-9, a-f), shown as "Client ID" on your app page at '
+                         'https://developer.spotify.com/dashboard. Do not use the app name, the Client Secret or the placeholder text from the instructions.')
     redirect = 'http://127.0.0.1:%d/callback' % args.port
     verifier, challenge = pkce_pair()
     state = secrets.token_urlsafe(16)
