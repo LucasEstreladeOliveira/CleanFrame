@@ -416,7 +416,7 @@
      The refresh token comes from assets/spotify-local.js, which scripts/spotify-auth.py writes into
      the package from .local/ and which is never committed. Nothing is shown without a real reading. */
   var SP_KEY = 'cleanframe.spotify.v1', SP_TIMEOUT = 10000, SP_PLAYING = 4000, SP_QUIET = 10000, SP_BACKOFF = 30000, SP_NOTE = 4000;
-  var sp = { token: '', expires: 0, loading: false, timer: 0, view: null, auth: false, note: '', noteTimer: 0, busy: false, tokenCbs: null };
+  var sp = { token: '', tokenStatus: 0, expires: 0, loading: false, timer: 0, view: null, auth: false, note: '', noteTimer: 0, busy: false, tokenCbs: null };
   function spConfig() {
     var c = window.CleanFrameSpotify;
     if (!c || c.enabled !== true || typeof c.clientId !== 'string' || !/^[A-Za-z0-9]{16,64}$/.test(c.clientId)) return null;
@@ -463,7 +463,7 @@
     spHttp('POST', 'https://accounts.spotify.com/api/token', { 'Content-Type': 'application/x-www-form-urlencoded' },
       'grant_type=refresh_token&client_id=' + encodeURIComponent(c.clientId) + '&refresh_token=' + encodeURIComponent(spRefreshToken(c)), function (status, json) {
         var waiting = sp.tokenCbs, err = null;
-        sp.tokenCbs = null;
+        sp.tokenCbs = null; sp.tokenStatus = status;
         if (status === 200 && json && typeof json.access_token === 'string' && json.access_token) {
           sp.token = json.access_token; sp.expires = Date.now() + (Number(json.expires_in) > 0 ? Number(json.expires_in) : 3600) * 1000;
           if (typeof json.refresh_token === 'string' && /^[A-Za-z0-9_.\-]{20,512}$/.test(json.refresh_token)) spSaveRefresh(c, json.refresh_token);
@@ -517,8 +517,15 @@
   }
   function spActive() { return !!spConfig() && S.stack && S.c.layout === 'gallery' && top().id === 'home' && !document.hidden; }
   function spShown() { return !!sp.view && !!spConfig(); }
-  function spControls() { return spShown() && !sp.view.auth; }
+  function spControls() { return spShown() && !sp.view.notice; }
   function spSchedule(ms) { clearTimeout(sp.timer); sp.timer = setTimeout(spPoll, ms); }
+  function spProblem(status) {
+    if (sp.tokenStatus && sp.tokenStatus !== 200) return ['Spotify sign-in failed (' + sp.tokenStatus + ')', 'Run scripts/spotify-auth.py and reinstall'];
+    if (status === 0) return ['Cannot reach Spotify', 'Check the TV network and the app permissions'];
+    if (status === 403) return ['Spotify refused access (403)', 'Add your account under User Management'];
+    if (status === 429) return ['Spotify is busy (429)', 'Trying again shortly'];
+    return ['Spotify error (' + status + ')', 'Trying again shortly'];
+  }
   function spPoll() {
     sp.timer = 0;
     if (!spActive() || sp.loading) return;
@@ -526,9 +533,13 @@
     spApi('GET', '/me/player?additional_types=episode', function (status, json, retry) {
       var view = status === -1 ? null : spParse(status, json), wait;
       sp.loading = false;
-      if (status === -1) { sp.auth = true; sp.view = { auth: true }; wait = SP_BACKOFF; }
+      if (status === -1) { sp.auth = true; sp.view = { notice: ['Reconnect Spotify', 'Run scripts/spotify-auth.py and reinstall'] }; wait = SP_BACKOFF; }
       else if (view) { sp.view = view; wait = view.playing ? SP_PLAYING : SP_QUIET; }
-      else wait = status === 429 ? Math.max(SP_BACKOFF, retry * 1000) : SP_BACKOFF;
+      else {
+        wait = status === 429 ? Math.max(SP_BACKOFF, retry * 1000) : SP_BACKOFF;
+        /* Keep a good reading on screen through a blip; with none, say why instead of hiding. */
+        if (!sp.view || sp.view.notice) sp.view = { notice: spProblem(status) };
+      }
       if (S.stack && sp.view && (top().id === 'home' || isSettingsDetail(top()))) render();
       spSchedule(wait);
     });
@@ -562,7 +573,7 @@
   function spotifyHtml(hs) {
     var v = sp.view, focus = hs.zone === 'media' ? hs.m : -1, status, buttons = '';
     if (!spShown()) return '';
-    if (v.auth) return '<div class="sp-body"><span class="sp-label">' + icon('music') + '<span>Spotify</span></span><span class="sp-title">Reconnect Spotify</span><span class="sp-artist">Run scripts/spotify-auth.py and reinstall</span></div>';
+    if (v.notice) return '<div class="sp-body"><span class="sp-label">' + icon('music') + '<span>Spotify</span></span><span class="sp-title">' + esc(v.notice[0]) + '</span><span class="sp-artist">' + esc(v.notice[1]) + '</span></div>';
     status = sp.note || (v.idle ? 'Nothing playing' : v.playing ? 'Now playing' : 'Paused');
     SP_BUTTONS.forEach(function (b, i) {
       var name = b[0] === 'toggle' ? (v.playing ? 'Pause' : 'Play') : b[2];
@@ -1367,7 +1378,7 @@
     var el = document.getElementById('spotify'), on;
     if (S.c.layout === 'gallery') ensureSpotify();
     on = S.c.layout === 'gallery' && spShown();
-    el.className = 'spotify' + (on ? ' is-on' : '') + (on && sp.view.auth ? ' is-auth' : '');
+    el.className = 'spotify' + (on ? ' is-on' : '') + (on && sp.view.notice ? ' is-auth' : '');
     setHTML(el, on ? spotifyHtml(hs) : '');
   }
   function utilBtn(z, i, action, inner, extra, name) {

@@ -30,7 +30,7 @@ function spotifyMock(overrides = {}) {
     }
     if (!/^Bearer AT\d+$/.test(request.headers().authorization || '')) return json(401, { error: { status: 401 } });
     const path = url.pathname;
-    if (path === '/v1/me/player' && request.method() === 'GET') return m.idle ? json(204) : json(200, m.player());
+    if (path === '/v1/me/player' && request.method() === 'GET') return m.playerStatus ? json(m.playerStatus, {}) : m.idle ? json(204) : json(200, m.player());
     if (!m.premium) return json(403, { error: { reason: 'PREMIUM_REQUIRED' } });
     if (!m.device) return json(404, { error: { reason: 'NO_ACTIVE_DEVICE' } });
     if (path === '/v1/me/player/next') m.index = (m.index + 1) % m.tracks.length;
@@ -143,7 +143,7 @@ async function page(options = {}) {
   const expected = [];
   current.__expectedFailures = expected;
   if (weather === 'fail' || weather.status >= 400) expected.push(WEATHER_HOST);
-  if (spotify && (!spotify.premium || !spotify.device || spotify.tokenStatus !== 200)) expected.push('spotify.com');
+  if (spotify && (!spotify.premium || !spotify.device || spotify.tokenStatus !== 200 || spotify.playerStatus)) expected.push('spotify.com');
   current.on('pageerror', error => report.pageErrors.push({ section, error: error.message }));
   current.on('response', response => { if (response.status() >= 400 && !expected.some(s => response.url().includes(s))) report.pageErrors.push({ section, status: response.status(), url: response.url() }); });
   current.on('requestfailed', request => {
@@ -534,6 +534,17 @@ try {
     await page({ spotify: m }); await look({ layout: 'gallery' }); await waitCard("/reconnect spotify/i.test(c.textContent)");
     v = await view(); await nav('up');
     check('An expired sign-in asks to reconnect and offers no controls', v.buttons.length === 0 && (await view()).focus.length === 0 && (await state()).focusAction.startsWith('util.'), { v, focus: (await state()).focusAction });
+    await closePage();
+
+    m = spotifyMock({ playerStatus: 403 });
+    await page({ spotify: m }); await look({ layout: 'gallery' }); await waitCard("/refused access/i.test(c.textContent)");
+    v = await view();
+    check('A refused API call is explained on the card instead of hiding it', /403/.test(v.title) && v.buttons.length === 0, v);
+    await closePage();
+
+    m = spotifyMock({ tokenStatus: 500 });
+    await page({ spotify: m }); await look({ layout: 'gallery' }); await waitCard("/sign-in failed/i.test(c.textContent)");
+    check('A failing sign-in shows its status', /\(500\)/.test((await view()).title), await view());
     await closePage();
 
     m = spotifyMock({ tracks: [{ name: '<img src=x onerror=alert(1)>', artists: [{ name: '<b>Band</b>' }], album: { name: '"><script>1</script>', images: [{ url: 'https://evil.example/pic.png', width: 300 }] } }] });
