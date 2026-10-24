@@ -4,7 +4,7 @@ The app includes all runtime JPEGs, thumbnails, registered material fields, publ
 
 ## Current List and Dock materials
 
-The 0.6 runtime uses fifteen photographs. Each has a background, a thumbnail, a small panel backdrop and four full-stage material JPEGs. The runtime never generates blur or reads photo pixels. Generate selected materials with:
+The 0.6 runtime uses sixteen photographs. Each has a background, a thumbnail, a small panel backdrop and four full-stage material JPEGs. The runtime never generates blur or reads photo pixels. Generate selected materials with:
 
 ```sh
 node scripts/build-materials.mjs summit,goldcoast,sydney,amber,mint,alpine
@@ -36,5 +36,7 @@ python3 scripts/prepare-wallpapers.py /path/to/originals --ids summit,goldcoast,
 The retained generator covers all fifteen filenames and writes `.local/materials/wallpapers/`. The original nine keep their macOS `sips` recipe. The new six require Pillow and use the reviewed centred crop and JPEG settings; Pillow is a development dependency only. Supply Golden Hour as `big-sur-golden-hour.jpg` in the originals folder. Install Pillow in a local Python environment when using the six newer photos.
 
 For another photo, add its source/credit to `SOURCES.json`, prepare its background and thumbnail, add the gallery entry in `catalog.js`, generate the four registered materials and panel backdrop, then measure and review its foreground metadata. Keep the crop identical across all assets. Run source and browser checks before packaging.
+
+Shibuya night was prepared from a supplied 1920 x 1080 JPEG with the same cover recipe (quality 90 with full chroma for the background, 512 x 288 at quality 85 for the thumbnail) and has no entry in the generator, which covers the fifteen Unsplash filenames. Its materials came from `node scripts/build-materials.mjs shibuya`. It has no adaptive-ink entry, so it uses the catalogue polarity values.
 
 Source pages and licence observations are recorded in [asset sources](asset-sources.md).

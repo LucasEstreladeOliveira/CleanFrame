@@ -4,6 +4,8 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { openPreview, root } from './browser.mjs';
 
 const KEY = 'cleanframe.home.v1';
+const WEATHER_HOST = 'api.open-meteo.com';
+const WEATHER_OK = { current: { time: '2026-10-24T09:15', interval: 900, temperature_2m: 18.4, weather_code: 1, is_day: 1 } };
 const PRIMARY = ['stremio', 'netflix', 'disneyplus', 'youtube', 'appletv', 'primevideo', 'hbomax', 'crunchyroll', 'applemusic'];
 const IDS = ['IkWsFHtOY9.Stremio', 'org.tizen.netflix-app', 'MCmYXNxgcu.DisneyPlus', '9Ur5IzDKqV.TizenYouTube', 'com.samsung.tv.aria-video', 'org.tizen.primevideo', '5b8c3eb16b.BeamCTVDev', 'OGLLvqej7u.CrunchyrollWebApp', 'org.tizen.apple.apple-music'];
 const NAMES = ['Stremio', 'Netflix', 'Disney+', 'YouTube', 'Apple TV', 'Prime Video', 'HBO Max', 'Crunchyroll', 'Apple Music'];
@@ -20,7 +22,7 @@ const CATALOG = IDS.map((id, i) => ({ id, name: NAMES[i], show: true, iconPath: 
 const walls = JSON.parse(readFileSync(root + 'app/assets/wallpapers/SOURCES.json', 'utf8'));
 const out = root + '.local/qa/';
 mkdirSync(out, { recursive: true });
-const sourceFiles = ['app/main.js', 'app/device.js', 'app/index.html', 'app/style.css', 'app/config.xml', 'app/assets/wallpapers/SOURCES.json', 'app/assets/wallpapers/catalog.js', 'app/assets/adaptive-ink.js', 'app/assets/icons/metrics.js'];
+const sourceFiles = ['app/main.js', 'app/device.js', 'app/weather-config.js', 'app/index.html', 'app/style.css', 'app/config.xml', 'app/assets/wallpapers/SOURCES.json', 'app/assets/wallpapers/catalog.js', 'app/assets/adaptive-ink.js', 'app/assets/icons/metrics.js'];
 const hashes = () => Object.fromEntries(sourceFiles.map(f => [f, createHash('sha256').update(readFileSync(root + f)).digest('hex')]));
 const report = { scope: 'Production UI in Chromium; mock public Tizen API only; no TV contacted.', sourceBefore: hashes(), checks: [], failures: [], pageErrors: [], expectedNetworkFailures: [] };
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -87,11 +89,18 @@ function installHarness({ seed, legacy, mock, catalog, minuteMs, catalogFailure,
   };
 }
 async function page(options = {}) {
+  // Weather is mocked at the network boundary: a fixture, 'fail' (connection refused) or a custom response.
+  const { weather = WEATHER_OK, ...harness } = options;
   current = await preview.browser.newPage({ viewport: { width: 1920, height: 1080 } });
   const owner = current;
+  current.__weatherRequests = [];
+  current.on('request', request => { if (request.url().includes(WEATHER_HOST)) current.__weatherRequests.push(request.url()); });
+  await current.route('https://' + WEATHER_HOST + '/**', route => weather === 'fail' ? route.abort('failed')
+    : route.fulfill({ status: weather.status || 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: typeof weather.body === 'string' ? weather.body : JSON.stringify(weather.json || weather) }));
   current.setDefaultTimeout(10000);
   const expected = [];
   current.__expectedFailures = expected;
+  if (weather === 'fail' || weather.status >= 400) expected.push(WEATHER_HOST);
   current.on('pageerror', error => report.pageErrors.push({ section, error: error.message }));
   current.on('response', response => { if (response.status() >= 400 && !expected.some(s => response.url().includes(s))) report.pageErrors.push({ section, status: response.status(), url: response.url() }); });
   current.on('requestfailed', request => {
@@ -100,7 +109,7 @@ async function page(options = {}) {
     if (expected.some(s => request.url().includes(s))) report.expectedNetworkFailures.push(failure);
     else if (failure.error !== 'net::ERR_ABORTED') report.pageErrors.push(failure);
   });
-  await current.addInitScript(installHarness, { mock: true, catalog: CATALOG, minuteMs: 60000, seed: baseline(), ...options });
+  await current.addInitScript(installHarness, { mock: true, catalog: CATALOG, minuteMs: 60000, seed: baseline(), ...harness });
   await current.goto(preview.baseURL + '/home/');
   await ready();
   await current.waitForLoadState('networkidle');
@@ -341,7 +350,7 @@ try {
       if (font === 'newsreader') {
         for (const layout of ['list', 'dock', 'gallery']) for (const controls of ['icons', 'both', 'text']) {
           await look({ layout, controls });
-          const wrong = await current.evaluate(() => [...document.querySelectorAll('.home .clock, .home .u, .home .u-label, .home .ph-name, .home .tile .label, .home .app-focus-name, .home .util-focus-label, .home .cap-date, .home .greeting, .home .wall-keep')].filter(e => !/Newsreader/.test(getComputedStyle(e).fontFamily)).map(e => ({ cls: e.className, font: getComputedStyle(e).fontFamily })));
+          const wrong = await current.evaluate(() => [...document.querySelectorAll('.home .clock, .home .u, .home .u-label, .home .ph-name, .home .tile .label, .home .app-focus-name, .home .util-focus-label, .home .cap-date, .home .greeting, .home .cap-weather, .home .cap-place, .home .wall-keep')].filter(e => !/Newsreader/.test(getComputedStyle(e).fontFamily)).map(e => ({ cls: e.className, font: getComputedStyle(e).fontFamily })));
           check('Newsreader covers Home text ' + layout + '/' + controls, wrong.length === 0, wrong);
         }
       }
@@ -360,7 +369,7 @@ try {
     const before = (await state()).look; await current.reload(); await ready(); check('Appearance survives reload', same((await state()).look, before));
   });
   await run('Cinematic Gallery layout', async () => {
-    await page(); await look({ bg: 'photo', layout: 'gallery', apps: 'both', focus: 'glass' });
+    await page({ weather: 'fail' }); await look({ bg: 'photo', layout: 'gallery', apps: 'both', focus: 'glass' });
     const g = await current.evaluate(() => {
       const q = s => document.querySelector(s), stage = document.getElementById('stage');
       return { classes: [...stage.classList], tiles: document.querySelectorAll('#track .tile').length, mat: getComputedStyle(q('.mat')).display,
@@ -371,7 +380,7 @@ try {
     check('Gallery shows every Home app in one row', g.tiles === PRIMARY.length, g.tiles);
     check('Gallery has no glass card', g.mat === 'none', g.mat);
     check('Gallery shows date, AM/PM and a local greeting', /^[A-Z][a-z]+day, [A-Z][a-z]+ \d{1,2}, \d{4}$/.test(g.date) && /^(AM|PM)$/.test(g.ampm) && /^Good (morning|afternoon|evening)$/.test(g.greeting) && g.greetingOn, g);
-    check('Gallery invents no weather or location', !/°|weather|clear skies|temperature/i.test(g.text), g.text);
+    check('Gallery invents no weather or location without a reading', !/°|weather|clear skies|temperature/i.test(g.text), g.text);
     check('Gallery keeps the stored apps choice', (await state()).look.apps === 'both');
     await nav('up');
     check('Greeting yields while a control has focus', await current.evaluate(() => !document.getElementById('greeting').classList.contains('is-on') && ShoreQA.where().zone === 'util'), await current.evaluate(() => ShoreQA.where()));
@@ -385,6 +394,74 @@ try {
     check('Gallery dock stays in the safe area without overlap', r.inside && !r.overlap, r);
     await look({ layout: 'dock' });
     check('Dock is unchanged after leaving Gallery', (await state()).look.layout === 'dock' && await current.evaluate(() => getComputedStyle(document.querySelector('.mat')).display !== 'none' && !document.getElementById('greeting').classList.contains('is-on')));
+  });
+  await run('Weather widget', async () => {
+    const view = () => current.evaluate(() => {
+      const q = s => document.querySelector(s), r = e => e && e.getBoundingClientRect();
+      const w = q('.cap-weather'), clock = q('.caption .clock'), place = q('.cap-place'), rule = q('.cap-rule'), caption = r(q('.caption'));
+      return { present: !!w, text: w ? w.textContent : '', place: place ? place.textContent : '', placeImages: document.querySelectorAll('.cap-place img').length,
+        icon: !!(w && w.querySelector('svg.ico')), below: !!(w && clock && r(w).top >= r(clock).bottom - 1),
+        ruled: !!(rule && clock && r(rule).top >= r(clock).bottom - 1 && r(rule).bottom <= r(w).top + 1), placed: !!(place && w && r(place).top >= r(w).bottom - 1),
+        fits: !!caption && caption.bottom < 620 && caption.right < 1100, text2: document.getElementById('home').innerText };
+    });
+    const requests = () => current.__weatherRequests.length;
+    const rerender = async () => { await look({ layout: 'dock' }); await look({ layout: 'gallery' }); };
+    const shown = () => current.waitForFunction(() => document.querySelector('.cap-weather'));
+    await page();
+    check('No weather request outside Gallery', requests() === 0, current.__weatherRequests);
+    await look({ layout: 'dock' }); check('Dock shows no weather', !(await view()).present);
+    await look({ layout: 'gallery' }); await shown();
+    let v = await view();
+    check('Gallery shows temperature and conditions', v.text === '18°C·Mostly clear', v.text);
+    check('Gallery shows the configured place', v.place === 'São Paulo', v.place);
+    check('Weather has an icon and sits below the clock under a rule', v.icon && v.below && v.ruled && v.placed && v.fits, v);
+    check('One Open-Meteo request with the configured coordinates and units', requests() === 1 && /latitude=-23\.5505&longitude=-46\.6333&current=temperature_2m,weather_code,is_day&temperature_unit=celsius/.test(current.__weatherRequests[0]), current.__weatherRequests);
+    const cached = await current.evaluate(() => JSON.parse(localStorage.getItem('cleanframe.weather.v1')));
+    check('The reading is cached', !!cached && cached.temp === 18.4 && cached.code === 1, cached);
+    await current.reload(); await ready(); await shown();
+    check('A fresh cache avoids another request', requests() === 1, current.__weatherRequests);
+    for (const size of [1920, 1280]) {
+      await current.setViewportSize({ width: size, height: size * 9 / 16 });
+      check('Weather fits at ' + size, (await view()).fits);
+    }
+    await current.setViewportSize({ width: 1920, height: 1080 });
+    await current.evaluate(() => { window.CleanFrameWeather.units = 'fahrenheit'; });
+    await rerender(); await current.waitForFunction(() => /°F/.test((document.querySelector('.cap-weather') || {}).textContent || ''));
+    check('Units follow the config', requests() === 2 && /temperature_unit=fahrenheit/.test(current.__weatherRequests[1]), current.__weatherRequests);
+    await current.evaluate(() => { window.CleanFrameWeather.units = 'celsius'; window.CleanFrameWeather.place = '<img src=x onerror="window.__weatherXss=1">'; });
+    await rerender(); await shown();
+    v = await view();
+    check('Place text is escaped', v.placeImages === 0 && v.place === '<img src=x onerror="window.__weatherXss=1">' && !(await current.evaluate(() => window.__weatherXss)), v);
+    await current.evaluate(() => { window.CleanFrameWeather.enabled = false; });
+    const before = requests(); await rerender();
+    check('Disabled config hides the widget and sends nothing', !(await view()).present && requests() === before, current.__weatherRequests);
+
+    await page({ weather: 'fail' }); await look({ layout: 'gallery' });
+    await current.waitForFunction(() => performance.getEntriesByType('resource').length > 0);
+    await current.waitForTimeout(400);
+    v = await view();
+    check('A failed request shows no weather and keeps the date and clock', !v.present && /\d{1,2}:\d{2}/.test(v.text2) && /(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day, /.test(v.text2), v.text2);
+    await rerender(); await rerender();
+    check('A failure is not retried on every render', requests() === 1, current.__weatherRequests);
+
+    for (const [name, bad] of [['null temperature', { current: { temperature_2m: null, weather_code: 1, is_day: 1 } }], ['unknown code', { current: { temperature_2m: 18, weather_code: 1234, is_day: 1 } }],
+      ['text temperature', { current: { temperature_2m: 'hot', weather_code: 1, is_day: 1 } }], ['absurd temperature', { current: { temperature_2m: 900, weather_code: 1, is_day: 1 } }],
+      ['server error', { status: 500, json: {} }], ['not JSON', { body: 'not json' }]]) {
+      await page({ weather: bad }); await look({ layout: 'gallery' }); await current.waitForTimeout(600);
+      check('Invalid data (' + name + ') shows nothing', !(await view()).present && requests() >= 1, await view());
+    }
+
+    await page({ weather: 'fail' }); await look({ layout: 'gallery' }); await current.waitForTimeout(300);
+    const key = '-23.5505,-46.6333,celsius';
+    await current.evaluate(([k, at]) => localStorage.setItem('cleanframe.weather.v1', JSON.stringify({ temp: 20.2, code: 3, day: 1, at, key: k })), [key, Date.now() - 3600000]);
+    await current.reload(); await ready(); await shown();
+    check('An older cached reading still shows while offline', (await view()).text === '20°C·Overcast', await view());
+    await current.evaluate(([k, at]) => localStorage.setItem('cleanframe.weather.v1', JSON.stringify({ temp: 20.2, code: 3, day: 1, at, key: k })), [key, Date.now() - 4 * 3600000]);
+    await current.reload(); await ready(); await current.waitForTimeout(600);
+    check('A cached reading older than three hours is not shown', !(await view()).present, await view());
+    await current.evaluate(([k, at]) => localStorage.setItem('cleanframe.weather.v1', JSON.stringify({ temp: 20.2, code: 3, day: 1, at, key: k })), ['0,0,celsius', Date.now() - 60000]);
+    await current.reload(); await ready(); await current.waitForTimeout(600);
+    check('A cached reading for another place is not shown', !(await view()).present, await view());
   });
   await run('Settings overview and visible choices', async () => {
     await page(); await scene('settings');
@@ -657,7 +734,7 @@ try {
       await act('background.wallpaper');
       await current.waitForFunction(() => ShoreQA.state().view === 'wallpaper');
       const names = await current.locator('.wallpaper-choice .setting-name').allTextContents();
-      check(layout + ' Wallpaper shows all fifteen named choices at ' + width, same(names, walls.map(w => w.name)), names);
+      check(layout + ' Wallpaper shows every named choice at ' + width, same(names, walls.map(w => w.name)), names);
       check('Wallpaper entry keeps the existing Home frame ' + layout + '/' + width, same(await previewFrame(), frame));
       const first = await wallpaperListGeometry();
       check('Wallpaper list shows about six rows with contained labels ' + layout + '/' + width, first.fullyVisible.length >= 5 && first.fullyVisible.length <= 6 && first.partlyVisible.length <= 7 && first.clippedParts.length === 0 && first.fullyVisible.includes(first.focus) && (await call('where')).focusCount === 1, first);

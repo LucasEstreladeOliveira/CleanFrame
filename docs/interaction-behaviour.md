@@ -3,7 +3,7 @@
 ## Home
 
 - Dock: Left/Right scrolls the apps without wrapping. Up enters the top-right controls, starting with Art Mode or the last selected control. Left/Right moves between Art Mode, All apps and Settings. Down or Back returns to the selected app. The clock is at the top left.
-- Gallery: a Dock variant. Navigation matches Dock (Left/Right between apps, Up for the controls, Down or Back to return), with an icon-only row centred near the bottom. The focused app has a thin warm outline and its name appears beneath it. The top left shows the date, the clock and AM/PM; a greeting based on the TV's local time sits under the controls and hides while a control has focus. It shows no weather or location, as CleanFrame has no source for them. Gallery has no glass material and always shows icons only; the Apps and Material choices are inactive with an explanation, and their stored values are kept.
+- Gallery: a Dock variant. Navigation matches Dock (Left/Right between apps, Up for the controls, Down or Back to return), with an icon-only row centred near the bottom. The focused app has a thin warm outline and its name appears beneath it. The top left shows the date, the clock and AM/PM; a greeting based on the TV's local time sits under the controls and hides while a control has focus. Under the clock it can show the current temperature, conditions and place (see Weather below); with no reading it shows none of that. Gallery has no glass material and always shows icons only; the Apps and Material choices are inactive with an explanation, and their stored values are kept.
 - List: Up/Down scrolls the apps without wrapping. Right enters the bottom-right controls, aligned with the clock above. Up/Down moves between Art Mode, All apps and Settings. Left or Back returns to the selected app. The list fades at both ends as it scrolls.
 - OK opens the selected item. Focus alone never launches an app.
 - Icons-only apps and controls reveal their names when focused. App presentation and control presentation are independent.
@@ -67,11 +67,11 @@ All calls have bounded response handling. A failure leaves CleanFrame usable. No
 
 The launcher stores appearance, Home order, recently removed apps, the last launched Home app, wallpaper and rotation locally. List and Dock share these preferences. The existing `cleanframe.home.v1` key is retained, with a fallback read from `cleanframe.shore.v1`. Legacy List maps to Dark + List + Type; Glass Dock and Glass Grid map to Photo + Dock + Glass. App order, wallpaper, rotation and the last Home app are preserved.
 
-The gallery contains 15 bundled wallpapers. Settings → Background → Wallpaper keeps the two-pane Settings frame. Up/Down browses a vertical thumbnail list without wrapping; the right-hand Home preview shows the candidate while the surrounding Settings backdrop stays on the applied photo. OK applies the focused photo and stays in Wallpaper. The tick marks the applied photo and preview status distinguishes unsaved browsing. Back restores the latest applied photo, cancels pending loading and returns to Background’s Wallpaper row. Photo and material assets change as one complete bundle; a failed load restores the applied preview and offers retry. Preview loading waits briefly for remote focus to settle. OK during loading queues application for that photo; another browse move or Back cancels it. Browsing never saves, and repeated OK on the applied photo does not write again.
+The gallery contains 16 bundled wallpapers. Settings → Background → Wallpaper keeps the two-pane Settings frame. Up/Down browses a vertical thumbnail list without wrapping; the right-hand Home preview shows the candidate while the surrounding Settings backdrop stays on the applied photo. OK applies the focused photo and stays in Wallpaper. The tick marks the applied photo and preview status distinguishes unsaved browsing. Back restores the latest applied photo, cancels pending loading and returns to Background’s Wallpaper row. Photo and material assets change as one complete bundle; a failed load restores the applied preview and offers retry. Preview loading waits briefly for remote focus to settle. OK during loading queues application for that photo; another browse move or Back cancels it. Browsing never saves, and repeated OK on the applied photo does not write again.
 
 Settings → Background → Rotation offers Fixed, Each time Home opens, Every 5 minutes, Every 15 minutes and Every hour. Each time Home opens advances once when the launcher loads; a return to the already-running launcher does not advance it. Timed rotation counts only visible Photo Home time in either List or Dock. Panels, flat backgrounds and time spent in other apps pause the cycle. Changing the photo or rotation mode starts a new interval.
 
-Launcher wallpaper is separate from native Art Mode. Runtime photos, materials and available fonts are local assets; they do not require the Mac or a network download.
+Launcher wallpaper is separate from native Art Mode. Runtime photos, materials and available fonts are local assets; they do not require the Mac or a network download. Only the optional Gallery weather reading uses the network.
 
 ## Sources
 
@@ -82,6 +82,14 @@ The native Home operation and startup configuration from 19 October remain separ
 
 ## Clock and rendering
 
-Both layouts show the TV's local time in 12-hour format, without AM/PM or seconds. It updates at the minute boundary and on return to the launcher. No date or clock panel is shown.
+List and Dock show the TV's local time in 12-hour format, without AM/PM or seconds. Gallery adds the date and AM/PM. The clock updates at the minute boundary and on return to the launcher. No clock panel is shown.
+
+## Weather
+
+Gallery shows current conditions under the clock: a short rule, an icon with the temperature and a short description, then the place. List and Dock never show it, and nothing is requested unless Gallery is active.
+
+The reading is real data from [Open-Meteo](https://open-meteo.com/), requested with the latitude and longitude in `app/weather-config.js` (place, coordinates and units are edited there, and `enabled: false` turns it off). It needs the manifest's `internet` privilege and an access entry for `https://api.open-meteo.com`, so the widget must be re-signed and reinstalled after updating. No account or key is used, and only the coordinates are sent. This is the launcher's only network request.
+
+A reading is refreshed after 30 minutes and cached locally. If a request fails, the last reading stays visible for up to three hours, retrying at most every five minutes; after that, or if the response is invalid, the widget shows nothing rather than a guess. A reading for different coordinates or units is ignored.
 
 Photographic materials and blurred panel backgrounds are generated before packaging and stay aligned with the full-screen image. Photo colour and contrast metadata are also prepared offline. Navigation does not sample image pixels, run an optics engine or apply live backdrop blur. Flat backgrounds use matching light or dark panel colours. Focus feedback uses transforms and opacity; reduced motion removes animated scaling and movement while retaining opacity feedback.

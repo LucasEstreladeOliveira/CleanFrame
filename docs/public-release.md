@@ -10,7 +10,7 @@ Paid Pangram fonts, signing keys, account tokens, local device addresses, recove
 
 ## Asset review
 
-Each of the fifteen wallpaper pages was checked for author and Unsplash licence on 20 October 2026; see [asset sources](asset-sources.md). ABC and SBS icons now use documented MIT Custom Brand Icons sources. Font and icon licence texts are retained. Original code uses MIT; third-party assets keep their own terms in [third-party notices](../THIRD_PARTY_NOTICES.md).
+Each of the fifteen Unsplash wallpaper pages was checked for author and licence on 20 October 2026; see [asset sources](asset-sources.md). The sixteenth, Shibuya night, has no recorded source or licence and must be confirmed or removed before a public release. ABC and SBS icons now use documented MIT Custom Brand Icons sources. Font and icon licence texts are retained. Original code uses MIT; third-party assets keep their own terms in [third-party notices](../THIRD_PARTY_NOTICES.md).
 
 ## Validation
 

@@ -19,6 +19,7 @@ Reviewed on 20 October 2026. Each of the fifteen linked Unsplash photo pages dis
 | Amber hills | Chris Barbalis | [Photo page](https://unsplash.com/photos/vazZtmYFgFY) |
 | Mint wave | MagicPattern | [Photo page](https://unsplash.com/photos/87PP9Zd7MNo) |
 | Alpine glow | Cristina Gottardi | [Photo page](https://unsplash.com/photos/CSpjU6hYo_0) |
+| Shibuya night | Supplied by the repository owner | Not recorded: confirm the photograph and sprite terms before redistribution |
 
 The background preparation and material rendering steps are described in [asset generation](assets.md). Full-size original photos and research studies are outside the public source.
 
