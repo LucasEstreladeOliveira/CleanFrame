@@ -15,6 +15,7 @@ import json
 import os
 import re
 import secrets
+import subprocess
 import threading
 import urllib.error
 import urllib.parse
@@ -64,6 +65,28 @@ def save(client_id, refresh_token, target=TARGET):
     os.chmod(target, 0o600)
 
 
+APP_FILE = ROOT / 'app/assets/spotify-local.js'
+
+
+def write_app_file(source=TARGET, target=APP_FILE):
+    """For builds made from app/ directly (for example the VS Code Tizen extension).
+
+    Writes your sign-in into the tracked app/assets/spotify-local.js and tells git to ignore local changes to it,
+    so it cannot be committed by accident. Undo with --clear-app.
+    """
+    settings = json.loads(source.read_text())
+    save(settings['clientId'], settings['refreshToken'], source)  # re-validates the stored values
+    target.write_text('window.CleanFrameSpotify = ' + json.dumps({
+        'enabled': True, 'clientId': settings['clientId'], 'refreshToken': settings['refreshToken']}) + ';\n')
+    subprocess.run(['git', 'update-index', '--skip-worktree', str(target.relative_to(ROOT))], cwd=ROOT, check=False)
+
+
+def clear_app_file(target=APP_FILE):
+    rel = str(target.relative_to(ROOT))
+    subprocess.run(['git', 'update-index', '--no-skip-worktree', rel], cwd=ROOT, check=False)
+    subprocess.run(['git', 'checkout', '--', rel], cwd=ROOT, check=False)
+
+
 def wait_for_code(port, state):
     result = {}
     done = threading.Event()
@@ -97,9 +120,24 @@ def wait_for_code(port, state):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--client-id', required=True, help='Client ID of your Spotify developer app')
+    parser.add_argument('--client-id', help='Client ID of your Spotify developer app (not needed with --apply-only or --clear-app)')
+    parser.add_argument('--into-app', action='store_true', help='After signing in, also write app/assets/spotify-local.js for builds made straight from app/')
+    parser.add_argument('--apply-only', action='store_true', help='Do not sign in again; write app/assets/spotify-local.js from the saved .local/spotify.json')
+    parser.add_argument('--clear-app', action='store_true', help='Restore the disabled app/assets/spotify-local.js')
     parser.add_argument('--port', type=int, default=8888)
     args = parser.parse_args()
+    if args.clear_app:
+        clear_app_file()
+        print('Restored the disabled ' + str(APP_FILE.relative_to(ROOT)) + '.')
+        return
+    if args.apply_only:
+        if not TARGET.is_file():
+            raise SystemExit('No saved sign-in. Run this script with --client-id first.')
+        write_app_file()
+        print('Wrote ' + str(APP_FILE.relative_to(ROOT)) + ' (git will not list or commit changes to it). Rebuild and reinstall.')
+        return
+    if not args.client_id:
+        raise SystemExit('--client-id is required for a new sign-in.')
     args.client_id = args.client_id.strip().strip('\'"<>')
     if not re.fullmatch(r'[0-9a-f]{32}', args.client_id):
         raise SystemExit('That is not a Spotify Client ID. It is exactly 32 letters and digits (0-9, a-f), shown as "Client ID" on your app page at '
@@ -120,6 +158,8 @@ def main():
     if not tokens.get('refresh_token'):
         raise SystemExit('Spotify did not return a refresh token.')
     save(args.client_id, tokens['refresh_token'])
+    if args.into_app:
+        write_app_file()
     print('Saved ' + str(TARGET) + '. Rebuild and reinstall CleanFrame to use it on the TV.')
 
 

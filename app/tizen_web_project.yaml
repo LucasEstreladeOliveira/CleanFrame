@@ -110,6 +110,10 @@ files:
   - assets/materials/ridge-field-clear.jpg
   - assets/materials/ridge-field-frost.jpg
   - assets/materials/ridge-study-soft.jpg
+  - assets/materials/shibuya-field-blur.jpg
+  - assets/materials/shibuya-field-clear.jpg
+  - assets/materials/shibuya-field-frost.jpg
+  - assets/materials/shibuya-study-soft.jpg
   - assets/materials/summit-field-blur.jpg
   - assets/materials/summit-field-clear.jpg
   - assets/materials/summit-field-frost.jpg
@@ -123,6 +127,7 @@ files:
   - assets/materials/valley-field-frost.jpg
   - assets/materials/valley-study-soft.jpg
   - assets/private-fonts.css
+  - assets/spotify-local.js
   - assets/typefaces.css
   - assets/wallpapers/README.md
   - assets/wallpapers/SOURCES.json
@@ -163,6 +168,9 @@ files:
   - assets/wallpapers/ridge-panel.jpg
   - assets/wallpapers/ridge-thumb.jpg
   - assets/wallpapers/ridge.jpg
+  - assets/wallpapers/shibuya-panel.jpg
+  - assets/wallpapers/shibuya-thumb.jpg
+  - assets/wallpapers/shibuya.jpg
   - assets/wallpapers/summit-panel.jpg
   - assets/wallpapers/summit-thumb.jpg
   - assets/wallpapers/summit.jpg
@@ -177,6 +185,7 @@ files:
   - index.html
   - main.js
   - style.css
+  - weather-config.js
 
 # list of files to exclude based on the matched patterns
 excludes:

@@ -63,7 +63,7 @@ For developer access, connect the TV and Mac to the same network, enable Develop
 
 1. Create an app at <https://developer.spotify.com/dashboard>, tick "Web API", and add the Redirect URI `http://127.0.0.1:8888/callback`. Copy its Client ID.
 2. Run `python3 scripts/spotify-auth.py --client-id <your client id>` on your Mac, approve in the browser. It writes `.local/spotify.json` (ignored by git, mode 600).
-3. Rebuild and reinstall (`python3 scripts/package.py`, then your usual install). The manifest gained access entries for `accounts.spotify.com`, `api.spotify.com` and `i.scdn.co`, so the widget must be re-signed. Preview (`scripts/preview.py`) picks the same file up for local testing.
+3. Rebuild and reinstall. With the SDK setup under `.local/`, `python3 scripts/package.py` adds your sign-in to the package by itself. If you build straight from `app/` instead (for example with the VS Code Tizen extension), run `python3 scripts/spotify-auth.py --apply-only` once: it writes your sign-in into `app/assets/spotify-local.js` and tells git to ignore local changes to that file so it cannot be committed. `--clear-app` restores the disabled copy. The manifest gained access entries for `accounts.spotify.com`, `api.spotify.com` and `i.scdn.co`, so the widget must be re-signed. Preview (`scripts/preview.py`) picks the same file up for local testing.
 4. Switch the layout to Gallery. Remove the card by deleting `.local/spotify.json` and rebuilding.
 
 Spotify may limit apps in development mode to a small list of users and to accounts with Premium; add your own account under the app's User Management if it refuses you.
