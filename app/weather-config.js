@@ -4,8 +4,8 @@
    Only these coordinates are sent. Keep the place name plain text. */
 window.CleanFrameWeather = {
   enabled: true,
-  place: 'São Paulo',
-  latitude: -23.5505,
-  longitude: -46.6333,
+  place: 'Rio de Janeiro',
+  latitude: -22.9068,
+  longitude: -43.1729,
   units: 'celsius' /* or 'fahrenheit' */
 };

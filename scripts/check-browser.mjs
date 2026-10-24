@@ -413,9 +413,9 @@ try {
     await look({ layout: 'gallery' }); await shown();
     let v = await view();
     check('Gallery shows temperature and conditions', v.text === '18°C·Mostly clear', v.text);
-    check('Gallery shows the configured place', v.place === 'São Paulo', v.place);
+    check('Gallery shows the configured place', v.place === 'Rio de Janeiro', v.place);
     check('Weather has an icon and sits below the clock under a rule', v.icon && v.below && v.ruled && v.placed && v.fits, v);
-    check('One Open-Meteo request with the configured coordinates and units', requests() === 1 && /latitude=-23\.5505&longitude=-46\.6333&current=temperature_2m,weather_code,is_day&temperature_unit=celsius/.test(current.__weatherRequests[0]), current.__weatherRequests);
+    check('One Open-Meteo request with the configured coordinates and units', requests() === 1 && /latitude=-22\.9068&longitude=-43\.1729&current=temperature_2m,weather_code,is_day&temperature_unit=celsius/.test(current.__weatherRequests[0]), current.__weatherRequests);
     const cached = await current.evaluate(() => JSON.parse(localStorage.getItem('cleanframe.weather.v1')));
     check('The reading is cached', !!cached && cached.temp === 18.4 && cached.code === 1, cached);
     await current.reload(); await ready(); await shown();
@@ -452,7 +452,7 @@ try {
     }
 
     await page({ weather: 'fail' }); await look({ layout: 'gallery' }); await current.waitForTimeout(300);
-    const key = '-23.5505,-46.6333,celsius';
+    const key = '-22.9068,-43.1729,celsius';
     await current.evaluate(([k, at]) => localStorage.setItem('cleanframe.weather.v1', JSON.stringify({ temp: 20.2, code: 3, day: 1, at, key: k })), [key, Date.now() - 3600000]);
     await current.reload(); await ready(); await shown();
     check('An older cached reading still shows while offline', (await view()).text === '20°C·Overcast', await view());
