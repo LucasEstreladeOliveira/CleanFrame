@@ -629,3 +629,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .bg-light.l-gallery .plate.on-sel{box-shadow:0 0 0 1px rgba(29,26,22,.38)}
 .bg-light.l-gallery .plate.on-lift{background:rgba(29,26,22,.1);box-shadow:0 0 0 2px rgba(29,26,22,.9)}
 .bg-light.l-gallery .tile .mark,.bg-dark.l-gallery .tile .mark{filter:none}
+
+/* Gallery weather, under the clock: a thin rule, icon with temperature and conditions, then the place. */
+.l-gallery .wx{display:flex;flex-direction:column;margin-top:14px;color:inherit}
+.l-gallery .wx-rule{display:block;width:72px;height:1px;margin:0 0 20px 6px;background:currentColor;opacity:.5}
+.l-gallery .wx-line{display:flex;align-items:center;gap:14px;font-size:32px;line-height:40px;font-weight:400;letter-spacing:.2px;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.34),0 2px 14px rgba(0,0,0,.2)}
+.l-gallery .wx-line .ico{width:44px;height:44px;stroke-width:1.5;filter:drop-shadow(0 1px 3px rgba(0,0,0,.3))}
+.l-gallery .wx-temp{font-variant-numeric:tabular-nums}
+.l-gallery .wx-dot{opacity:.7}
+.l-gallery .wx-text{font-size:28px;opacity:.8}
+.l-gallery .wx-place{display:flex;align-items:center;gap:14px;margin-top:12px;font-size:28px;line-height:36px;letter-spacing:.2px;opacity:.78;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.34),0 2px 14px rgba(0,0,0,.2)}
+.l-gallery .wx-place .ico{width:40px;height:40px;stroke-width:1.5;filter:drop-shadow(0 1px 3px rgba(0,0,0,.3))}
+.l-gallery .shade{height:440px}
+.bg-photo.has-adaptive-ink.l-gallery .caption .wx{color:var(--tl-clock-ink)}
+.bg-photo.has-adaptive-ink.l-gallery.adaptive-tl-dark .caption .wx-line,.bg-photo.has-adaptive-ink.l-gallery.adaptive-tl-dark .caption .wx-place{text-shadow:var(--tl-shadow)}
+.bg-dark.l-gallery .wx-line,.bg-light.l-gallery .wx-line,.bg-dark.l-gallery .wx-place,.bg-light.l-gallery .wx-place{text-shadow:none}
+.bg-dark.l-gallery .wx .ico,.bg-light.l-gallery .wx .ico{filter:none}

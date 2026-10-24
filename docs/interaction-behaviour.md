@@ -3,7 +3,7 @@
 ## Home
 
 - Dock: Left/Right scrolls the apps without wrapping. Up enters the top-right controls, starting with Art Mode or the last selected control. Left/Right moves between Art Mode, All apps and Settings. Down or Back returns to the selected app. The clock is at the top left.
-- Gallery: a Dock variant. Navigation matches Dock (Left/Right between apps, Up for the controls, Down or Back to return), with an icon-only row centred near the bottom. The focused app has a thin warm outline and its name appears beneath it. The top left shows the date, the clock and AM/PM; a greeting based on the TV's local time sits under the controls and hides while a control has focus. It shows no weather or location, as CleanFrame has no source for them. Gallery has no glass material and always shows icons only; the Apps and Material choices are inactive with an explanation, and their stored values are kept.
+- Gallery: a Dock variant. Navigation matches Dock (Left/Right between apps, Up for the controls, Down or Back to return), with an icon-only row centred near the bottom. The focused app has a thin warm outline and its name appears beneath it. The top left shows the date, the clock and AM/PM; a greeting based on the TV's local time sits under the controls and hides while a control has focus. Under the clock it shows current weather and the place when the weather service has answered (see Gallery weather). Gallery has no glass material and always shows icons only; the Apps and Material choices are inactive with an explanation, and their stored values are kept.
 - List: Up/Down scrolls the apps without wrapping. Right enters the bottom-right controls, aligned with the clock above. Up/Down moves between Art Mode, All apps and Settings. Left or Back returns to the selected app. The list fades at both ends as it scrolls.
 - OK opens the selected item. Focus alone never launches an app.
 - Icons-only apps and controls reveal their names when focused. App presentation and control presentation are independent.
@@ -85,3 +85,15 @@ The native Home operation and startup configuration from 19 October remain separ
 Both layouts show the TV's local time in 12-hour format, without AM/PM or seconds. It updates at the minute boundary and on return to the launcher. No date or clock panel is shown.
 
 Photographic materials and blurred panel backgrounds are generated before packaging and stay aligned with the full-screen image. Photo colour and contrast metadata are also prepared offline. Navigation does not sample image pixels, run an optics engine or apply live backdrop blur. Flat backgrounds use matching light or dark panel colours. Focus feedback uses transforms and opacity; reduced motion removes animated scaling and movement while retaining opacity feedback.
+
+## Gallery weather
+
+Gallery shows current conditions under the clock: an icon, the temperature in °C, a short description and the place name. The data comes from Open-Meteo's forecast API for one fixed place set in `WEATHER` in `app/main.js` (São Paulo by default; edit the name, latitude, longitude and unit).
+
+- It is requested when Gallery is shown and refreshed at most every 15 minutes, with a two-minute pause after a failure.
+- The widget appears only while the last good answer is under an hour old. An unreachable service, a malformed response, a non-numeric temperature, an unknown weather code or a missing network permission hides it. No placeholder or stale value is shown.
+- Dock and List never request weather.
+- The request carries the fixed coordinates only, plus the TV's address as with any web request.
+- The manifest needs the `internet` privilege and the `api.open-meteo.com` origin. An installed app keeps the permissions it was signed with, so rebuild, sign and reinstall the package to pick them up.
+
+This has been checked in the browser preview with a mocked service. It has not been confirmed on a TV.

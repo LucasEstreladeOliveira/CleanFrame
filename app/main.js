@@ -9,6 +9,10 @@
   var CAP = 9, SCRIM_Y = 560;
   var DOCK_MODES = { both: { tw: 288, th: 200, pitch: 296 }, text: { tw: 288, th: 104, pitch: 296 }, icons: { tw: 176, th: 144, pitch: 184 }, gallery: { tw: 144, th: 128, pitch: 168 } };
   var GALLERY_DOCK_Y = 820, GALLERY_MAX = 9;
+  /* Gallery weather: Open-Meteo current conditions for one fixed place. Edit name, lat and lon to move it.
+     The widget hides unless the service has answered recently; it never shows placeholder values. */
+  var WEATHER = { name: 'S\u00e3o Paulo', lat: -23.5505, lon: -46.6333, unit: 'c', refreshMs: 15 * 60000, staleMs: 60 * 60000, retryMs: 2 * 60000, timeoutMs: 8000 };
+  var wx = { data: null, at: 0, failedAt: 0, loading: false };
   var WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   var GRID_ROW = 240, GRID_COL = 344, COLS = 5;
@@ -65,6 +69,15 @@
     arrange: '<path d="M4 8.5h14M15 5.5l3 3-3 3M20 15.5H6M9 12.5l-3 3 3 3"/>',
     settings: '<path d="m9 3-.6 2.4-2 1.2L4 6l-2 3.5L3.8 11v2L2 14.5 4 18l2.4-.6 2 1.2L9 21h6l.6-2.4 2-1.2 2.4.6 2-3.5-1.8-1.5v-2L22 9.5 20 6l-2.4.6-2-1.2L15 3Z"/><circle cx="12" cy="12" r="3.2"/>',
     home: '<path d="M4 11 12 4.5l8 6.5v8a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1Z"/>',
+    'wx-sun': '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>',
+    'wx-moon': '<path d="M20 14.2A8 8 0 0 1 9.8 4a8 8 0 1 0 10.2 10.2Z"/>',
+    'wx-cloud': '<path d="M7 18h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.1 9.2 4.4 4.4 0 0 0 7 18Z"/>',
+    'wx-cloudsun': '<circle cx="8" cy="8" r="2.6"/><path d="M8 3v1.2M3 8h1.2M4.5 4.5l.9.9M11.5 4.5l-.9.9"/><path d="M9 20h8.2a3.5 3.5 0 0 0 .5-7A4.7 4.7 0 0 0 9.3 12 3.8 3.8 0 0 0 9 20Z"/>',
+    'wx-fog': '<path d="M4 8h16M6 12h14M4 16h12M8 20h10"/>',
+    'wx-rain': '<path d="M7 14h10a3.6 3.6 0 0 0 .5-7.1A5.2 5.2 0 0 0 7.3 6.3 3.9 3.9 0 0 0 7 14Z"/><path d="m9 17-1 3M13 17l-1 3M17 17l-1 3"/>',
+    'wx-snow': '<path d="M7 14h10a3.6 3.6 0 0 0 .5-7.1A5.2 5.2 0 0 0 7.3 6.3 3.9 3.9 0 0 0 7 14Z"/><path d="M9 18h.01M13 20h.01M17 18h.01"/>',
+    'wx-storm': '<path d="M7 14h10a3.6 3.6 0 0 0 .5-7.1A5.2 5.2 0 0 0 7.3 6.3 3.9 3.9 0 0 0 7 14Z"/><path d="m12.5 15-2 3h3l-2 3"/>',
+    pin: '<path d="M12 21s6.5-5.6 6.5-11a6.5 6.5 0 0 0-13 0c0 5.4 6.5 11 6.5 11Z"/><circle cx="12" cy="10" r="2.3"/>',
     undo: '<path d="M9 6 5 10l4 4"/><path d="M5 10h9.5a4.5 4.5 0 0 1 0 9H11"/>',
     check: '<path d="m5.5 12.5 4 4 9-9"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
@@ -1077,9 +1090,63 @@
   }
   function dateText(d) { return WEEKDAYS[d.getDay()] + ', ' + MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear(); }
   function greetingText(d) { var h = d.getHours(); return h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; }
+  /* WMO weather codes from Open-Meteo. An unknown code hides the widget rather than guessing. */
+  function weatherInfo(code, day) {
+    if (code === 0) return [day ? 'sun' : 'moon', 'Clear skies'];
+    if (code === 1) return [day ? 'sun' : 'moon', 'Mostly clear'];
+    if (code === 2) return [day ? 'cloudsun' : 'cloud', 'Partly cloudy'];
+    if (code === 3) return ['cloud', 'Overcast'];
+    if (code === 45 || code === 48) return ['fog', 'Fog'];
+    if (code >= 51 && code <= 57) return ['rain', 'Drizzle'];
+    if (code >= 61 && code <= 67) return ['rain', 'Rain'];
+    if (code >= 71 && code <= 77) return ['snow', 'Snow'];
+    if (code >= 80 && code <= 82) return ['rain', 'Showers'];
+    if (code === 85 || code === 86) return ['snow', 'Snow showers'];
+    if (code >= 95 && code <= 99) return ['storm', 'Thunderstorm'];
+    return null;
+  }
+  function weatherLive() { return !!wx.data && Date.now() - wx.at < WEATHER.staleMs; }
+  function weatherChanged() { var t = top(); if (t && (t.id === 'home' || isSettingsDetail(t))) renderCaption(t, homeState(t)); }
+  function weatherFail() { wx.loading = false; wx.failedAt = Date.now(); weatherChanged(); }
+  function weatherFetch() {
+    var xhr, url = 'https://api.open-meteo.com/v1/forecast?latitude=' + WEATHER.lat + '&longitude=' + WEATHER.lon
+      + '&current=temperature_2m,weather_code,is_day&timezone=auto' + (WEATHER.unit === 'f' ? '&temperature_unit=fahrenheit' : '');
+    wx.loading = true;
+    try {
+      xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.timeout = WEATHER.timeoutMs;
+      xhr.onload = function () {
+        var cur = null;
+        try { cur = JSON.parse(xhr.responseText).current; } catch (e) { cur = null; }
+        if (xhr.status === 200 && cur && typeof cur.temperature_2m === 'number' && typeof cur.weather_code === 'number') {
+          wx.data = { temp: Math.round(cur.temperature_2m), code: cur.weather_code, day: cur.is_day !== 0 };
+          wx.at = Date.now(); wx.failedAt = 0; wx.loading = false; weatherChanged();
+        } else weatherFail();
+      };
+      xhr.onerror = xhr.ontimeout = xhr.onabort = weatherFail;
+      xhr.send();
+    } catch (e) { weatherFail(); }
+  }
+  function weatherEnsure() {
+    var now = Date.now();
+    if (S.c.layout !== 'gallery' || document.hidden || wx.loading) return;
+    if (wx.data && now - wx.at < WEATHER.refreshMs) return;
+    if (wx.failedAt && now - wx.failedAt < WEATHER.retryMs) return;
+    weatherFetch();
+  }
+  function weatherHtml() {
+    var info = weatherLive() ? weatherInfo(wx.data.code, wx.data.day) : null;
+    if (!info) return '';
+    return '<span class="wx"><span class="wx-rule"></span><span class="wx-line">' + icon('wx-' + info[0]) + '<span class="wx-temp">' + wx.data.temp + '\u00b0' + (WEATHER.unit === 'f' ? 'F' : 'C')
+      + '</span><span class="wx-dot" aria-hidden="true">\u00b7</span><span class="wx-text">' + info[1] + '</span></span><span class="wx-place">' + icon('pin') + '<span>' + esc(WEATHER.name) + '</span></span></span>';
+  }
   function renderCaption(t, hs) {
     var d = new Date(), html = '<span class="clock">' + clockHtml() + '</span>';
-    if (S.c.layout === 'gallery') html = '<span class="cap-date">' + dateText(d) + '</span><span class="clock">' + clockHtml() + '<span class="ampm">' + (d.getHours() < 12 ? 'AM' : 'PM') + '</span></span>';
+    if (S.c.layout === 'gallery') {
+      html = '<span class="cap-date">' + dateText(d) + '</span><span class="clock">' + clockHtml() + '<span class="ampm">' + (d.getHours() < 12 ? 'AM' : 'PM') + '</span></span>';
+      weatherEnsure(); html += weatherHtml();
+    }
     if (appsMode() !== 'icons' && hs.items[hs.i] && (S.c.layout === 'list' ? photoLabel(hs.items[hs.i].id, false).size < 88 || photoLabel(hs.items[hs.i].id, false).ellipsis : hs.zone === 'apps' && reducedDockLabel(hs.items[hs.i].id))) html += '<span class="cap-line full-name">' + esc(app(hs.items[hs.i].id).name) + '</span>';
     setHTML(caption, html);
   }

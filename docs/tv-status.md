@@ -45,3 +45,7 @@ Preserve this configuration and `.local/native-home/original.json`. Restore the 
 The helper uses undocumented native operations, guarded for the reference identity and firmware. Its source is in `scripts/native-home/`; compiled tools, original values and diagnostics stay private. See [development](development.md), the [setup guide](agent-tv-setup-guide.md) and the [native helper notes](../scripts/native-home/README.md).
 
 Implementation reference: [S90D firmware 2130 native Home work](https://github.com/splitcipher/couchroot/blob/83906b468836869933012da03a4018fb339462b3/docs/devices/s90d/README.md). That is a different model; it does not establish compatibility with another TV.
+
+## Gallery weather (unconfirmed)
+
+Gallery weather needs the `internet` privilege and the `api.open-meteo.com` origin in `app/config.xml`. Both were added in source and checked only in the browser preview with a mocked service. Whether the TV's runtime honours that origin, and whether the signing profile grants the privilege, still needs a physical check after a rebuild and reinstall. If it fails, the widget stays hidden.

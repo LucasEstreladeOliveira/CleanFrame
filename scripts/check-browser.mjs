@@ -92,6 +92,11 @@ async function page(options = {}) {
   current.setDefaultTimeout(10000);
   const expected = [];
   current.__expectedFailures = expected;
+  // Weather is the only external request. Mock it so checks stay offline and deterministic.
+  if (options.weather === 'fail') expected.push('api.open-meteo.com');
+  await current.route('https://api.open-meteo.com/**', route => options.weather === 'fail' ? route.abort('failed')
+    : route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify(options.weatherBody || { current: { time: '2026-10-24T01:30', interval: 900, temperature_2m: 18.4, weather_code: 0, is_day: 0 } }) }));
   current.on('pageerror', error => report.pageErrors.push({ section, error: error.message }));
   current.on('response', response => { if (response.status() >= 400 && !expected.some(s => response.url().includes(s))) report.pageErrors.push({ section, status: response.status(), url: response.url() }); });
   current.on('requestfailed', request => {
@@ -371,7 +376,6 @@ try {
     check('Gallery shows every Home app in one row', g.tiles === PRIMARY.length, g.tiles);
     check('Gallery has no glass card', g.mat === 'none', g.mat);
     check('Gallery shows date, AM/PM and a local greeting', /^[A-Z][a-z]+day, [A-Z][a-z]+ \d{1,2}, \d{4}$/.test(g.date) && /^(AM|PM)$/.test(g.ampm) && /^Good (morning|afternoon|evening)$/.test(g.greeting) && g.greetingOn, g);
-    check('Gallery invents no weather or location', !/°|weather|clear skies|temperature/i.test(g.text), g.text);
     check('Gallery keeps the stored apps choice', (await state()).look.apps === 'both');
     await nav('up');
     check('Greeting yields while a control has focus', await current.evaluate(() => !document.getElementById('greeting').classList.contains('is-on') && ShoreQA.where().zone === 'util'), await current.evaluate(() => ShoreQA.where()));
@@ -385,6 +389,36 @@ try {
     check('Gallery dock stays in the safe area without overlap', r.inside && !r.overlap, r);
     await look({ layout: 'dock' });
     check('Dock is unchanged after leaving Gallery', (await state()).look.layout === 'dock' && await current.evaluate(() => getComputedStyle(document.querySelector('.mat')).display !== 'none' && !document.getElementById('greeting').classList.contains('is-on')));
+  });
+  await run('Gallery weather', async () => {
+    const wxState = () => current.evaluate(() => { const q = s => document.querySelector(s), wx = q('.l-gallery .wx');
+      return wx ? { temp: q('.wx-temp').textContent, text: q('.wx-text').textContent, place: q('.wx-place').textContent, rule: !!q('.wx-rule'), icons: wx.querySelectorAll('svg.ico').length,
+        below: wx.getBoundingClientRect().top >= q('.l-gallery .clock').getBoundingClientRect().bottom - 1, box: [wx.getBoundingClientRect().left, wx.getBoundingClientRect().right, wx.getBoundingClientRect().bottom] } : null; });
+    const homeText = () => current.evaluate(() => document.getElementById('home').innerText);
+    await page(); await look({ bg: 'photo', layout: 'gallery' });
+    await current.waitForSelector('.l-gallery .wx', { timeout: 5000 });
+    const w = await wxState();
+    check('Weather shows the service values under the clock', w.temp === '18°C' && w.text === 'Clear skies' && w.place === 'São Paulo' && w.rule && w.icons === 2 && w.below, w);
+    check('Weather stays inside the safe area', w.box[0] >= 96 && w.box[1] <= 1000 && w.box[2] <= 540, w.box);
+    await look({ layout: 'dock' });
+    check('Dock and List show no weather', await wxState() === null && !/°/.test(await homeText()));
+    await look({ layout: 'list' });
+    check('List shows no weather', await wxState() === null && !/°/.test(await homeText()));
+    await closePage();
+
+    await page({ weather: 'fail' }); await look({ bg: 'photo', layout: 'gallery' });
+    await current.waitForTimeout(700);
+    check('A failed weather request shows nothing, not placeholder values', await wxState() === null && !/°|Clear|Rain|weather/i.test(await homeText()), await homeText());
+    await closePage();
+
+    for (const [name, body] of [['an unknown weather code', { current: { temperature_2m: 5, weather_code: 1234, is_day: 1 } }], ['a malformed response', { hello: 'world' }], ['a non-numeric temperature', { current: { temperature_2m: '18', weather_code: 0, is_day: 1 } }]]) {
+      await page({ weatherBody: body }); await look({ bg: 'photo', layout: 'gallery' }); await current.waitForTimeout(700);
+      check('Weather ignores ' + name, await wxState() === null && !/°/.test(await homeText()), await homeText());
+      await closePage();
+    }
+    await page({ weatherBody: { current: { temperature_2m: -3.4, weather_code: 95, is_day: 1 } } }); await look({ bg: 'photo', layout: 'gallery' });
+    await current.waitForSelector('.l-gallery .wx', { timeout: 5000 });
+    const s = await wxState(); check('Weather rounds temperature and names thunderstorms', s.temp === '-3°C' && s.text === 'Thunderstorm', s);
   });
   await run('Settings overview and visible choices', async () => {
     await page(); await scene('settings');

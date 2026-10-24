@@ -27,7 +27,8 @@ The public preview uses the included Manrope, Geist and Newsreader fonts.
 
 ## What you can change
 
-- Choose a List or Dock layout, with icons, names or both.
+- Choose a List, Dock or Gallery layout; Gallery adds a date, large clock and live weather (internet required for weather).
+- List and Dock offer icons, names or both.
 - Use a photograph, light or dark background, with a simple 12-hour clock.
 - Adjust typography, focus and glass materials through the same Settings interface.
 - Choose and reorder Home apps; discover installed apps on the TV.

@@ -33,3 +33,7 @@ Photographers retain their rights. Wallpapers, thumbnails, panel backgrounds and
 Development dependencies retain the licences in their npm packages. They are not copied into the TV JavaScript runtime.
 
 `npm run export:public` excludes private fonts and includes this notice and the root MIT licence. Preserve the included font and icon licence texts. Review [public release preparation](docs/public-release.md) before publishing a repository or download.
+
+## Weather data
+
+Gallery weather uses the [Open-Meteo](https://open-meteo.com/) forecast API. Open-Meteo data is licensed CC BY 4.0: weather data by Open-Meteo.com. The free API is for non-commercial use only; read their [terms](https://open-meteo.com/en/terms) before using CleanFrame in a commercial setting. CleanFrame makes one request about every 15 minutes while Gallery is shown.
