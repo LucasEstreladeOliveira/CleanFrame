@@ -642,3 +642,27 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 /* A soft local shade behind the date, clock and weather keeps them legible over busy photographs. */
 .l-gallery .shade::after{content:"";position:absolute;left:0;top:0;width:960px;height:440px;background:radial-gradient(ellipse 600px 330px at 290px 200px,rgba(6,4,14,.36),rgba(6,4,14,.16) 55%,rgba(6,4,14,0) 100%);pointer-events:none}
 .bg-dark.l-gallery .shade::after,.bg-light.l-gallery .shade::after{display:none}
+/* Spotify now playing: Gallery only, a dark glass card so it stays readable on any photo. */
+.spotify{display:none;position:absolute;right:112px;top:452px;width:640px;height:256px;padding:24px;box-sizing:border-box;border-radius:32px;background:rgba(12,9,20,.62);box-shadow:0 0 0 1px rgba(255,255,255,.10),0 18px 48px rgba(0,0,0,.34);color:#fff6ea;gap:24px;align-items:center}
+.l-gallery .spotify.is-on{display:flex}
+.spotify.is-auth{height:auto;min-height:0}
+.sp-art{flex:none;width:208px;height:208px;border-radius:20px;overflow:hidden;background:rgba(255,255,255,.08);box-shadow:0 8px 24px rgba(0,0,0,.36)}
+.sp-cover{display:block;width:208px;height:208px;object-fit:cover}
+.sp-blank{display:flex;width:100%;height:100%;align-items:center;justify-content:center;opacity:.5}
+.sp-blank .ico{width:72px;height:72px;stroke-width:1.4}
+.sp-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.sp-label{display:flex;align-items:center;gap:10px;font-size:22px;line-height:30px;letter-spacing:.6px;text-transform:uppercase;opacity:.7;white-space:nowrap}
+.sp-label.is-note{opacity:1;color:#ffd9a8;text-transform:none;letter-spacing:.2px}
+.sp-label .ico{width:24px;height:24px;stroke-width:1.6;flex:none}
+.sp-title{font-size:34px;line-height:44px;font-weight:600;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.sp-artist,.sp-album{font-size:26px;line-height:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-artist{opacity:.88}
+.sp-album{opacity:.62}
+.sp-controls{display:flex;align-items:center;gap:14px;margin-top:14px}
+.sp-btn{width:64px;height:64px;border-radius:32px;padding:0;border:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.10);color:inherit;cursor:pointer}
+.sp-btn.sp-toggle{width:76px;height:76px;border-radius:38px;background:rgba(255,255,255,.18)}
+.sp-btn .ico{width:30px;height:30px;stroke:none}
+.sp-btn .ico *{fill:currentColor;stroke:none}
+.sp-btn.sp-toggle .ico{width:36px;height:36px}
+.sp-btn.is-busy{opacity:.6}
+.sp-btn.is-focus{background:rgba(255,236,214,.96);color:#1d1a16;box-shadow:0 0 0 2px rgba(255,222,184,.95),0 0 28px rgba(255,190,120,.30)}

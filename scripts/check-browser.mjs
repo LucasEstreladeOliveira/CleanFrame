@@ -5,6 +5,43 @@ import { openPreview, root } from './browser.mjs';
 
 const KEY = 'cleanframe.home.v1';
 const WEATHER_HOST = 'api.open-meteo.com';
+const SPOTIFY_CLIENT = 'abcdef0123456789abcdef0123456789', SPOTIFY_REFRESH = 'R'.repeat(40);
+const COVER = 'https://i.scdn.co/image/ab67616d00001e02cafe';
+const PIXEL = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+const SPOTIFY_TRACKS = [
+  { name: 'Midnight City', artists: [{ name: 'M83' }], album: { name: 'Hurry Up, We Are Dreaming', images: [{ url: COVER + '640', width: 640 }, { url: COVER + '300', width: 300 }, { url: COVER + '64', width: 64 }] } },
+  { name: 'Reunion', artists: [{ name: 'M83' }, { name: 'Guest' }], album: { name: 'Hurry Up, We Are Dreaming', images: [{ url: COVER + '300', width: 300 }] } },
+  { name: 'Wait', artists: [{ name: 'M83' }], album: { name: 'Hurry Up, We Are Dreaming', images: [{ url: COVER + '300', width: 300 }] } }
+];
+// A small stateful Spotify: refresh-token grant plus the player endpoints the widget uses.
+function spotifyMock(overrides = {}) {
+  const m = { requests: [], tokens: 0, index: 0, playing: true, premium: true, device: true, idle: false, tokenStatus: 200, tracks: SPOTIFY_TRACKS, rotate: false, ...overrides };
+  m.player = () => ({ is_playing: m.playing, currently_playing_type: 'track', item: m.tracks[m.index] });
+  m.handle = async route => {
+    const request = route.request(), url = new URL(request.url()), cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PUT' };
+    const json = (status, body) => route.fulfill({ status, headers: cors, contentType: 'application/json', body: body === undefined ? '' : JSON.stringify(body) });
+    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
+    if (url.hostname === 'i.scdn.co') return route.fulfill({ status: 200, contentType: 'image/png', body: PIXEL });
+    m.requests.push({ method: request.method(), host: url.hostname, path: url.pathname, body: request.postData() || '', auth: request.headers().authorization || '' });
+    if (url.hostname === 'accounts.spotify.com') {
+      if (m.tokenStatus !== 200) return json(m.tokenStatus, { error: 'invalid_grant' });
+      m.tokens++;
+      return json(200, { access_token: 'AT' + m.tokens, token_type: 'Bearer', expires_in: 3600, ...(m.rotate ? { refresh_token: 'N'.repeat(40) } : {}) });
+    }
+    if (!/^Bearer AT\d+$/.test(request.headers().authorization || '')) return json(401, { error: { status: 401 } });
+    const path = url.pathname;
+    if (path === '/v1/me/player' && request.method() === 'GET') return m.idle ? json(204) : json(200, m.player());
+    if (!m.premium) return json(403, { error: { reason: 'PREMIUM_REQUIRED' } });
+    if (!m.device) return json(404, { error: { reason: 'NO_ACTIVE_DEVICE' } });
+    if (path === '/v1/me/player/next') m.index = (m.index + 1) % m.tracks.length;
+    else if (path === '/v1/me/player/previous') m.index = (m.index + m.tracks.length - 1) % m.tracks.length;
+    else if (path === '/v1/me/player/pause') m.playing = false;
+    else if (path === '/v1/me/player/play') { m.playing = true; m.idle = false; }
+    else return json(404, {});
+    return json(204);
+  };
+  return m;
+}
 const WEATHER_OK = { current: { time: '2026-10-24T09:15', interval: 900, temperature_2m: 18.4, weather_code: 1, is_day: 1 } };
 const PRIMARY = ['stremio', 'netflix', 'disneyplus', 'youtube', 'appletv', 'primevideo', 'hbomax', 'crunchyroll', 'applemusic'];
 const IDS = ['IkWsFHtOY9.Stremio', 'org.tizen.netflix-app', 'MCmYXNxgcu.DisneyPlus', '9Ur5IzDKqV.TizenYouTube', 'com.samsung.tv.aria-video', 'org.tizen.primevideo', '5b8c3eb16b.BeamCTVDev', 'OGLLvqej7u.CrunchyrollWebApp', 'org.tizen.apple.apple-music'];
@@ -90,9 +127,14 @@ function installHarness({ seed, legacy, mock, catalog, minuteMs, catalogFailure,
 }
 async function page(options = {}) {
   // Weather is mocked at the network boundary: a fixture, 'fail' (connection refused) or a custom response.
-  const { weather = WEATHER_OK, ...harness } = options;
+  const { weather = WEATHER_OK, spotify = null, ...harness } = options;
   current = await preview.browser.newPage({ viewport: { width: 1920, height: 1080 } });
   const owner = current;
+  current.__spotify = spotify;
+  if (spotify) {
+    await current.route('**/assets/spotify-local.js', route => route.fulfill({ status: 200, contentType: 'text/javascript', body: 'window.CleanFrameSpotify = ' + JSON.stringify({ enabled: true, clientId: SPOTIFY_CLIENT, refreshToken: SPOTIFY_REFRESH }) + ';' }));
+    for (const host of ['accounts.spotify.com', 'api.spotify.com', 'i.scdn.co']) await current.route('https://' + host + '/**', spotify.handle);
+  }
   current.__weatherRequests = [];
   current.on('request', request => { if (request.url().includes(WEATHER_HOST)) current.__weatherRequests.push(request.url()); });
   await current.route('https://' + WEATHER_HOST + '/**', route => weather === 'fail' ? route.abort('failed')
@@ -101,6 +143,7 @@ async function page(options = {}) {
   const expected = [];
   current.__expectedFailures = expected;
   if (weather === 'fail' || weather.status >= 400) expected.push(WEATHER_HOST);
+  if (spotify && (!spotify.premium || !spotify.device || spotify.tokenStatus !== 200)) expected.push('spotify.com');
   current.on('pageerror', error => report.pageErrors.push({ section, error: error.message }));
   current.on('response', response => { if (response.status() >= 400 && !expected.some(s => response.url().includes(s))) report.pageErrors.push({ section, status: response.status(), url: response.url() }); });
   current.on('requestfailed', request => {
@@ -394,6 +437,118 @@ try {
     check('Gallery dock stays in the safe area without overlap', r.inside && !r.overlap, r);
     await look({ layout: 'dock' });
     check('Dock is unchanged after leaving Gallery', (await state()).look.layout === 'dock' && await current.evaluate(() => getComputedStyle(document.querySelector('.mat')).display !== 'none' && !document.getElementById('greeting').classList.contains('is-on')));
+  });
+  await run('Spotify widget', async () => {
+    const view = () => current.evaluate(() => {
+      const q = s => document.querySelector(s), r = e => e && e.getBoundingClientRect(), card = q('#spotify'), on = !!card && card.classList.contains('is-on');
+      const c = r(card), dock = q('.dock .tile'), caption = r(q('.caption')), utils = r(q('#utils'));
+      return { on, text: on ? card.innerText.replace(/\s+/g, ' ').trim() : '', title: q('.sp-title') ? q('.sp-title').textContent : '', artist: q('.sp-artist') ? q('.sp-artist').textContent : '', album: q('.sp-album') ? q('.sp-album').textContent : '',
+        label: q('.sp-label') ? q('.sp-label').textContent : '', cover: q('.sp-cover') ? q('.sp-cover').getAttribute('src') : null, loaded: q('.sp-cover') ? q('.sp-cover').naturalWidth > 0 : false,
+        buttons: [...document.querySelectorAll('.sp-btn')].map(b => b.getAttribute('aria-label')), focus: [...document.querySelectorAll('.sp-btn.is-focus')].map(b => b.getAttribute('data-action')), images: card ? card.querySelectorAll('img').length : 0,
+        inside: !!c && on && c.left >= 0 && c.right <= 1920 && c.top >= 0 && c.bottom <= 1080, clear: !!c && on && c.top >= utils.bottom - 1 && (!dock || c.bottom <= dock.getBoundingClientRect().top + 1) && c.left >= caption.right - 1,
+        art: q('.sp-art') ? r(q('.sp-art')).width : 0, tap: [...document.querySelectorAll('.sp-btn')].every(b => r(b).width >= 64 && r(b).height >= 64) };
+    });
+    const waitCard = predicate => current.waitForFunction(p => { const c = document.querySelector('#spotify'); return c && c.classList.contains('is-on') && new Function('c', 'return ' + p)(c); }, predicate);
+    const reqs = (m, method, path) => m.requests.filter(r => r.host === 'api.spotify.com' && (!method || r.method === method) && (!path || r.path === path));
+
+    // Disabled by default: the committed config sends nothing.
+    await page();
+    await look({ layout: 'gallery' }); await current.waitForTimeout(300);
+    check('Spotify is hidden and silent without credentials', !(await view()).on);
+    await closePage();
+
+    let m = spotifyMock(); m.rotate = true;
+    await page({ spotify: m });
+    await look({ layout: 'dock' }); await current.waitForTimeout(300);
+    check('Spotify sends nothing outside Gallery', m.requests.length === 0 && !(await view()).on, m.requests);
+    await look({ layout: 'gallery' });
+    await waitCard("c.querySelector('.sp-title')");
+    let v = await view();
+    check('Shows song, artist and album', v.title === 'Midnight City' && v.artist === 'M83' && v.album === 'Hurry Up, We Are Dreaming' && /now playing/i.test(v.label), v);
+    check('Shows the album cover from the 300px image', v.cover === COVER + '300' && v.images === 1, v);
+    await current.waitForFunction(() => document.querySelector('.sp-cover') && document.querySelector('.sp-cover').naturalWidth > 0);
+    check('Card fits the screen, sits under the controls and clear of the clock and dock', v.inside && v.clear && v.art >= 160, v);
+    check('Has previous, pause and next at TV-friendly sizes', v.buttons.join() === 'Previous,Pause,Next' && v.tap, v);
+    const token = m.requests.find(r => r.host === 'accounts.spotify.com');
+    check('Refreshes the token with the PKCE refresh grant and no secret', !!token && token.body.includes('grant_type=refresh_token') && token.body.includes('client_id=' + SPOTIFY_CLIENT) && token.body.includes('refresh_token=' + SPOTIFY_REFRESH) && !/client_secret/.test(token.body), token);
+    check('Reads playback with a bearer token', reqs(m, 'GET', '/v1/me/player').length >= 1 && reqs(m, 'GET', '/v1/me/player')[0].auth === 'Bearer AT1', m.requests);
+    const savedToken = await current.evaluate(() => JSON.parse(localStorage.getItem('cleanframe.spotify.v1')));
+    check('A rotated refresh token replaces the old one', savedToken && savedToken.token === 'N'.repeat(40) && savedToken.from === 'R'.repeat(40), savedToken);
+
+    // Remote control: apps up -> media, left/right between buttons, up -> utilities, down back.
+    await nav('up');
+    check('Up from the apps reaches the play controls', (await view()).focus.join() === 'spotify.toggle', await view());
+    await nav('left'); check('Left selects Previous', (await view()).focus.join() === 'spotify.previous');
+    await nav('left'); check('Focus stops at the first button', (await view()).focus.join() === 'spotify.previous');
+    await nav('right', 'right'); check('Right selects Next', (await view()).focus.join() === 'spotify.next');
+    await nav('right'); check('Focus stops at the last button', (await view()).focus.join() === 'spotify.next');
+    await nav('up'); check('Up from the controls reaches the Home controls', (await state()).focusAction === 'util.art' || (await state()).focusAction === 'util.apps' || (await state()).focusAction === 'util.settings', await state());
+    await nav('down'); check('Down from Home controls returns to the player', (await view()).focus.length === 1);
+    await nav('down'); check('Down from the player returns to the apps', (await view()).focus.length === 0 && (await state()).focusAction.startsWith('app.') || (await view()).focus.length === 0);
+    await nav('up', 'back'); check('Back from the player returns to the apps', (await view()).focus.length === 0);
+
+    // Commands.
+    await nav('up', 'ok');
+    await current.waitForFunction(() => document.querySelector('.sp-toggle') && document.querySelector('.sp-toggle').getAttribute('aria-label') === 'Play');
+    check('OK on pause pauses and flips to play', reqs(m, 'PUT', '/v1/me/player/pause').length === 1 && !m.playing && /paused/i.test((await view()).label), { requests: m.requests.map(r => r.method + r.path), view: await view() });
+    await nav('ok');
+    await current.waitForFunction(() => document.querySelector('.sp-toggle').getAttribute('aria-label') === 'Pause');
+    check('OK on play resumes', reqs(m, 'PUT', '/v1/me/player/play').length === 1 && m.playing, m.requests.map(r => r.method + r.path));
+    await nav('right', 'ok');
+    await waitCard("c.querySelector('.sp-title').textContent === 'Reunion'");
+    v = await view();
+    check('Next skips and the card follows the new song', reqs(m, 'POST', '/v1/me/player/next').length === 1 && v.title === 'Reunion' && v.artist === 'M83, Guest', v);
+    await nav('left', 'left', 'ok');
+    await waitCard("c.querySelector('.sp-title').textContent === 'Midnight City'");
+    check('Previous goes back', reqs(m, 'POST', '/v1/me/player/previous').length === 1, m.requests.map(r => r.method + r.path));
+    check('Commands go out one at a time', m.requests.filter(r => r.path.startsWith('/v1/me/player/')).length === 4, m.requests.map(r => r.method + r.path));
+
+    // Polling follows the screen.
+    const gets = () => reqs(m, 'GET', '/v1/me/player').length;
+    let before = gets(); await current.waitForTimeout(4600);
+    check('Polls while the card is visible', gets() > before, { before, after: gets() });
+    await look({ layout: 'dock' }); before = gets(); await current.waitForTimeout(5000);
+    check('Stops polling when Gallery is not showing', gets() === before, { before, after: gets() });
+    await closePage();
+
+    // Failure and edge cases.
+    m = spotifyMock({ premium: false });
+    await page({ spotify: m }); await look({ layout: 'gallery' }); await waitCard("c.querySelector('.sp-title')");
+    await nav('up', 'right', 'ok'); await waitCard("c.querySelector('.sp-label.is-note')");
+    check('Without Premium the card says so and keeps playing info', /premium/i.test((await view()).label) && (await view()).title === 'Midnight City', await view());
+    await closePage();
+
+    m = spotifyMock({ device: false });
+    await page({ spotify: m }); await look({ layout: 'gallery' }); await waitCard("c.querySelector('.sp-title')");
+    await nav('up', 'ok'); await waitCard("c.querySelector('.sp-label.is-note')");
+    check('With no active device the card asks to open Spotify', /open spotify/i.test((await view()).label), await view());
+    await closePage();
+
+    m = spotifyMock({ idle: true });
+    await page({ spotify: m }); await look({ layout: 'gallery' }); await waitCard("/nothing playing/i.test(c.textContent)");
+    v = await view();
+    check('Nothing playing shows a quiet card with a play button, not an invented song', /nothing playing/i.test(v.label) && v.buttons.includes('Play') && !v.cover && v.images === 0, v);
+    await closePage();
+
+    m = spotifyMock({ tokenStatus: 400 });
+    await page({ spotify: m }); await look({ layout: 'gallery' }); await waitCard("/reconnect spotify/i.test(c.textContent)");
+    v = await view(); await nav('up');
+    check('An expired sign-in asks to reconnect and offers no controls', v.buttons.length === 0 && (await view()).focus.length === 0 && (await state()).focusAction.startsWith('util.'), { v, focus: (await state()).focusAction });
+    await closePage();
+
+    m = spotifyMock({ tracks: [{ name: '<img src=x onerror=alert(1)>', artists: [{ name: '<b>Band</b>' }], album: { name: '"><script>1</script>', images: [{ url: 'https://evil.example/pic.png', width: 300 }] } }] });
+    await page({ spotify: m }); await look({ layout: 'gallery' }); await waitCard("c.querySelector('.sp-title')");
+    v = await view();
+    check('Song details are shown as text and an untrusted cover host is refused', v.title === '<img src=x onerror=alert(1)>' && v.artist === '<b>Band</b>' && v.images === 0 && !v.cover && await current.evaluate(() => !document.querySelector('#spotify b, #spotify script')), v);
+    await closePage();
+
+    m = spotifyMock();
+    await page({ spotify: m }); await look({ layout: 'gallery' }); await waitCard("c.querySelector('.sp-title')");
+    for (const width of [1280, 1920]) {
+      await current.setViewportSize({ width, height: Math.round(width * 9 / 16) }); await current.waitForTimeout(150);
+      v = await view(); check('Card stays inside the stage at ' + width, v.inside && v.clear, v);
+    }
+    await closePage();
   });
   await run('Weather widget', async () => {
     const view = () => current.evaluate(() => {

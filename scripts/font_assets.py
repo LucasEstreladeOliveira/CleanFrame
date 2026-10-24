@@ -59,6 +59,11 @@ def font_overlay(root=ROOT, include_private=True):
                            'font-weight:' + str(weight) + ";src:url('private-fonts/" + relative + "') format('truetype');"
                            'font-display:block;' + font['metrics'] + '}')
     assets['assets/private-fonts.css'] = ('\n'.join(css) + '\n').encode()
+    spotify = root / '.local/spotify.json'
+    if include_private and spotify.is_file() and not spotify.is_symlink():
+        settings = json.loads(spotify.read_text())
+        assets['assets/spotify-local.js'] = ('window.CleanFrameSpotify = ' + json.dumps({
+            'enabled': True, 'clientId': settings['clientId'], 'refreshToken': settings['refreshToken']}) + ';\n').encode()
     assets['assets/font-catalog.js'] = ('window.CleanFramePrivateFontIDs = '
                                        + json.dumps(private_ids + PUBLIC_FONT_IDS) + ';\n').encode()
     return assets

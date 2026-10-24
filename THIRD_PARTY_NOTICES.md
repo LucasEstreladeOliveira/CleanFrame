@@ -28,6 +28,8 @@ The fifteen Unsplash photo pages were individually checked on 20 October 2026. E
 
 The Gallery weather widget requests current conditions from the [Open-Meteo](https://open-meteo.com/) API, which is free for non-commercial use. Check its [licence and attribution terms](https://open-meteo.com/en/license) before redistributing a build.
 
+The optional Gallery Spotify card uses the [Spotify Web API](https://developer.spotify.com/documentation/web-api) with your own Spotify developer app and account. Album art and metadata belong to Spotify and its rights holders; check the [Developer Terms](https://developer.spotify.com/terms) and design guidelines (attribution and logo use) before redistributing a build that includes it.
+
 Photographers retain their rights. Wallpapers, thumbnails, panel backgrounds and material fields derive from the credited photographs and retain their terms. The Unsplash licence permits copying, modification and distribution subject to its restrictions, including on selling unmodified images and building a competing image service.
 
 ## Development dependencies and exports
