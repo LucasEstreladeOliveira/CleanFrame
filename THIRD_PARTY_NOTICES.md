@@ -24,7 +24,9 @@ Brand marks identify services. Their owners retain trademark rights; this projec
 
 ## Photographs and derived materials
 
-The fifteen photo pages were individually checked on 20 October 2026. Each displayed its credited author and free use under the [Unsplash License](https://unsplash.com/license). The [asset source register](docs/asset-sources.md) links every page. Runtime paths are in `app/assets/wallpapers/SOURCES.json`.
+The fifteen Unsplash photo pages were individually checked on 20 October 2026. Each displayed its credited author and free use under the [Unsplash License](https://unsplash.com/license). The [asset source register](docs/asset-sources.md) links every page. Runtime paths are in `app/assets/wallpapers/SOURCES.json`. The sixteenth, Shibuya night, was supplied by the repository owner and its original photograph and sprite sources are not recorded; confirm their terms before redistributing a public build.
+
+The Gallery weather widget requests current conditions from the [Open-Meteo](https://open-meteo.com/) API, which is free for non-commercial use. Check its [licence and attribution terms](https://open-meteo.com/en/license) before redistributing a build.
 
 Photographers retain their rights. Wallpapers, thumbnails, panel backgrounds and material fields derive from the credited photographs and retain their terms. The Unsplash licence permits copying, modification and distribution subject to its restrictions, including on selling unmodified images and building a competing image service.
 

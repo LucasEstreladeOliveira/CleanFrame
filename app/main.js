@@ -65,6 +65,15 @@
     arrange: '<path d="M4 8.5h14M15 5.5l3 3-3 3M20 15.5H6M9 12.5l-3 3 3 3"/>',
     settings: '<path d="m9 3-.6 2.4-2 1.2L4 6l-2 3.5L3.8 11v2L2 14.5 4 18l2.4-.6 2 1.2L9 21h6l.6-2.4 2-1.2 2.4.6 2-3.5-1.8-1.5v-2L22 9.5 20 6l-2.4.6-2-1.2L15 3Z"/><circle cx="12" cy="12" r="3.2"/>',
     home: '<path d="M4 11 12 4.5l8 6.5v8a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1Z"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>',
+    moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/>',
+    cloud: '<path d="M7 18h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.1 9.2 4.4 4.4 0 0 0 7 18Z"/>',
+    partly: '<circle cx="8.5" cy="8" r="2.8"/><path d="M8.5 2.6v.8M3.1 8h.8M4.7 4.2l.6.6M12.3 4.2l-.6.6"/><path d="M8.5 19h8.5a3.5 3.5 0 0 0 .5-6.96A4.8 4.8 0 0 0 8.3 12.4 3.3 3.3 0 0 0 8.5 19Z"/>',
+    rain: '<path d="M7 14.5h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.1 5.7 4.4 4.4 0 0 0 7 14.5Z"/><path d="m8.5 17.5-1 2.5M12.5 17.5l-1 2.5M16.5 17.5l-1 2.5"/>',
+    snow: '<path d="M7 14.5h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.1 5.7 4.4 4.4 0 0 0 7 14.5Z"/><path d="M8.5 18h.01M12 19.5h.01M15.5 18h.01M10.2 21h.01M13.8 21h.01"/>',
+    storm: '<path d="M7 14.5h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.1 5.7 4.4 4.4 0 0 0 7 14.5Z"/><path d="m12.8 14.5-2.3 3.2h3l-2.3 3.3"/>',
+    fog: '<path d="M5 8h14M3 12h18M6 16h12M9 20h6"/>',
+    pin: '<path d="M12 21s6-5.2 6-10a6 6 0 0 0-12 0c0 4.8 6 10 6 10Z"/><circle cx="12" cy="11" r="2.2"/>',
     undo: '<path d="M9 6 5 10l4 4"/><path d="M5 10h9.5a4.5 4.5 0 0 1 0 9H11"/>',
     check: '<path d="m5.5 12.5 4 4 9-9"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
@@ -319,6 +328,83 @@
   }
   function setHTML(el, html) { if (el._html !== html) { el._html = html; el.innerHTML = html; } }
   function attrs(el, z, i, action) { el.setAttribute('data-z', z); el.setAttribute('data-i', String(i)); el.setAttribute('data-action', action); }
+
+  /* ---------- Weather (Gallery layout only) ----------
+     Real readings only: current conditions from Open-Meteo for the coordinates in weather-config.js.
+     A reading is cached for a few hours so a short outage keeps the last value; after that, or when
+     the data is invalid, the widget shows nothing. */
+  var WX_KEY = 'cleanframe.weather.v1', WX_FRESH = 30 * 60000, WX_STALE = 3 * 3600000, WX_RETRY = 5 * 60000, WX_TIMEOUT = 10000;
+  var WX_CODES = {
+    0: ['Clear skies', 'clear'], 1: ['Mostly clear', 'clear'], 2: ['Partly cloudy', 'partly'], 3: ['Overcast', 'cloud'],
+    45: ['Fog', 'fog'], 48: ['Freezing fog', 'fog'], 51: ['Light drizzle', 'rain'], 53: ['Drizzle', 'rain'], 55: ['Heavy drizzle', 'rain'],
+    56: ['Freezing drizzle', 'rain'], 57: ['Freezing drizzle', 'rain'], 61: ['Light rain', 'rain'], 63: ['Rain', 'rain'], 65: ['Heavy rain', 'rain'],
+    66: ['Freezing rain', 'rain'], 67: ['Freezing rain', 'rain'], 71: ['Light snow', 'snow'], 73: ['Snow', 'snow'], 75: ['Heavy snow', 'snow'],
+    77: ['Snow grains', 'snow'], 80: ['Light showers', 'rain'], 81: ['Showers', 'rain'], 82: ['Heavy showers', 'rain'],
+    85: ['Snow showers', 'snow'], 86: ['Heavy snow showers', 'snow'], 95: ['Thunderstorm', 'storm'], 96: ['Thunderstorm with hail', 'storm'],
+    97: ['Thunderstorm', 'storm'], 99: ['Thunderstorm with hail', 'storm']
+  };
+  var wx = { reading: null, cacheRead: false, loading: false, retryAt: 0 };
+  function weatherConfig() {
+    var c = window.CleanFrameWeather;
+    if (!c || c.enabled === false || typeof c.latitude !== 'number' || typeof c.longitude !== 'number') return null;
+    if (!isFinite(c.latitude) || !isFinite(c.longitude) || Math.abs(c.latitude) > 90 || Math.abs(c.longitude) > 180) return null;
+    return { place: typeof c.place === 'string' ? c.place.slice(0, 48) : '', lat: c.latitude, lon: c.longitude, units: c.units === 'fahrenheit' ? 'fahrenheit' : 'celsius' };
+  }
+  function weatherKey(cfg) { return cfg.lat + ',' + cfg.lon + ',' + cfg.units; }
+  function weatherValid(r, cfg) {
+    return !!r && typeof r.temp === 'number' && isFinite(r.temp) && r.temp >= -130 && r.temp <= 160 && typeof r.code === 'number' && !!WX_CODES[r.code]
+      && typeof r.at === 'number' && r.at <= Date.now() + 60000 && r.key === weatherKey(cfg);
+  }
+  function readWeatherCache(cfg) {
+    try {
+      var r = JSON.parse(localStorage.getItem(WX_KEY));
+      return weatherValid(r, cfg) && Date.now() - r.at < WX_STALE ? r : null;
+    } catch (e) { return null; }
+  }
+  function writeWeatherCache(r) { try { localStorage.setItem(WX_KEY, JSON.stringify(r)); } catch (e) { /* the reading still shows this session */ } }
+  function weatherShown() {
+    var cfg = weatherConfig();
+    return cfg && weatherValid(wx.reading, cfg) && Date.now() - wx.reading.at < WX_STALE ? wx.reading : null;
+  }
+  function parseWeather(xhr, cfg) {
+    var data, c, r;
+    if (xhr.status !== 200) return null;
+    try { data = JSON.parse(xhr.responseText); } catch (e) { return null; }
+    c = data && data.current;
+    if (!c || typeof c.temperature_2m !== 'number' || typeof c.weather_code !== 'number') return null;
+    r = { temp: c.temperature_2m, code: c.weather_code, day: c.is_day === 0 ? 0 : 1, at: Date.now(), key: weatherKey(cfg) };
+    return weatherValid(r, cfg) ? r : null;
+  }
+  function ensureWeather() {
+    var cfg = weatherConfig(), xhr, done;
+    if (!cfg || wx.loading || document.hidden || Date.now() < wx.retryAt) return;
+    if (!wx.cacheRead) { wx.cacheRead = true; wx.reading = readWeatherCache(cfg); }
+    if (wx.reading && wx.reading.key === weatherKey(cfg) && Date.now() - wx.reading.at < WX_FRESH) return;
+    wx.loading = true;
+    function finish(r) {
+      if (done) return;
+      done = true; wx.loading = false;
+      if (r) { wx.reading = r; wx.retryAt = 0; writeWeatherCache(r); } else wx.retryAt = Date.now() + WX_RETRY;
+      if (S.stack && (top().id === 'home' || isSettingsDetail(top()))) renderCaption(top(), homeState(top()));
+    }
+    try {
+      xhr = new XMLHttpRequest();
+      xhr.open('GET', 'https://api.open-meteo.com/v1/forecast?latitude=' + cfg.lat + '&longitude=' + cfg.lon + '&current=temperature_2m,weather_code,is_day&temperature_unit=' + cfg.units + '&timezone=auto', true);
+      xhr.timeout = WX_TIMEOUT;
+      xhr.onload = function () { finish(parseWeather(xhr, cfg)); };
+      xhr.onerror = xhr.ontimeout = xhr.onabort = function () { finish(null); };
+      xhr.send();
+    } catch (e) { finish(null); }
+  }
+  function weatherHtml() {
+    var r = weatherShown(), cfg = weatherConfig(), info, kind;
+    if (!r || !cfg) return '';
+    info = WX_CODES[r.code];
+    kind = info[1] === 'clear' ? (r.day ? 'sun' : 'moon') : info[1] === 'partly' && !r.day ? 'cloud' : info[1];
+    return '<span class="cap-rule"></span><span class="cap-weather">' + icon(kind) + '<span>' + Math.round(r.temp) + '°' + (cfg.units === 'fahrenheit' ? 'F' : 'C') + '</span>'
+      + '<span class="cap-dot" aria-hidden="true">·</span><span>' + esc(info[0]) + '</span></span>'
+      + (cfg.place ? '<span class="cap-place">' + icon('pin') + '<span>' + esc(cfg.place) + '</span></span>' : '');
+  }
 
   /* ---------- Saved preferences ---------- */
   function safeId(id) { return typeof id === 'string' && /^[A-Za-z0-9][A-Za-z0-9._-]{0,160}$/.test(id) && ['constructor', 'prototype', '__proto__'].indexOf(id) < 0; }
@@ -1079,7 +1165,10 @@
   function greetingText(d) { var h = d.getHours(); return h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; }
   function renderCaption(t, hs) {
     var d = new Date(), html = '<span class="clock">' + clockHtml() + '</span>';
-    if (S.c.layout === 'gallery') html = '<span class="cap-date">' + dateText(d) + '</span><span class="clock">' + clockHtml() + '<span class="ampm">' + (d.getHours() < 12 ? 'AM' : 'PM') + '</span></span>';
+    if (S.c.layout === 'gallery') {
+      ensureWeather();
+      html = '<span class="cap-date">' + dateText(d) + '</span><span class="clock">' + clockHtml() + '<span class="ampm">' + (d.getHours() < 12 ? 'AM' : 'PM') + '</span></span>' + weatherHtml();
+    }
     if (appsMode() !== 'icons' && hs.items[hs.i] && (S.c.layout === 'list' ? photoLabel(hs.items[hs.i].id, false).size < 88 || photoLabel(hs.items[hs.i].id, false).ellipsis : hs.zone === 'apps' && reducedDockLabel(hs.items[hs.i].id))) html += '<span class="cap-line full-name">' + esc(app(hs.items[hs.i].id).name) + '</span>';
     setHTML(caption, html);
   }

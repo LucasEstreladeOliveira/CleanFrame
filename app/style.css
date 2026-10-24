@@ -607,8 +607,18 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .l-gallery .cap-date{font-size:28px;line-height:40px;font-weight:400;letter-spacing:2px;color:inherit;opacity:.86;text-shadow:0 1px 3px rgba(0,0,0,.34),0 2px 14px rgba(0,0,0,.2);white-space:nowrap}
 .l-gallery .caption .clock{font-size:128px;line-height:136px;font-weight:var(--font-clock-weight,300);letter-spacing:-4px;display:flex;align-items:baseline;gap:18px;text-shadow:0 2px 6px rgba(0,0,0,.26),0 4px 28px rgba(0,0,0,.2)}
 .l-gallery .clock .ampm{font-size:32px;line-height:40px;font-weight:400;letter-spacing:1px;opacity:.78}
-.bg-photo.has-adaptive-ink.l-gallery .caption .cap-date,.bg-photo.has-adaptive-ink.l-gallery .caption .ampm{color:var(--tl-clock-ink)}
-.bg-photo.has-adaptive-ink.l-gallery.adaptive-tl-dark .caption .cap-date,.bg-photo.has-adaptive-ink.l-gallery.adaptive-tl-dark .caption .ampm{text-shadow:var(--tl-shadow)}
+/* Weather sits under the clock: a short rule, then conditions, then the place. Real readings only; empty means absent. */
+.l-gallery .cap-rule{display:block;width:168px;height:1px;margin:12px 0 18px 2px;background:currentColor;opacity:.46;box-shadow:0 1px 2px rgba(0,0,0,.28)}
+.l-gallery .cap-weather{display:flex;align-items:center;gap:14px;font-size:32px;line-height:44px;font-weight:400;letter-spacing:.2px;opacity:.92;text-shadow:0 1px 3px rgba(0,0,0,.34),0 2px 14px rgba(0,0,0,.2);white-space:nowrap}
+.l-gallery .cap-weather .ico{width:38px;height:38px;stroke-width:1.5;filter:drop-shadow(0 1px 3px rgba(0,0,0,.34))}
+.l-gallery .cap-dot{opacity:.6}
+.l-gallery .cap-place{display:flex;align-items:center;gap:14px;margin:6px 0 0 2px;font-size:26px;line-height:36px;font-weight:400;letter-spacing:.2px;opacity:.72;text-shadow:0 1px 3px rgba(0,0,0,.34),0 2px 14px rgba(0,0,0,.2);white-space:nowrap}
+.l-gallery .cap-place .ico{width:30px;height:30px;stroke-width:1.5}
+.bg-dark.l-gallery .cap-weather,.bg-light.l-gallery .cap-weather,.bg-dark.l-gallery .cap-place,.bg-light.l-gallery .cap-place,.bg-dark.l-gallery .cap-date,.bg-light.l-gallery .cap-date{text-shadow:none}
+.bg-dark.l-gallery .cap-weather .ico,.bg-light.l-gallery .cap-weather .ico,.bg-dark.l-gallery .cap-rule,.bg-light.l-gallery .cap-rule{filter:none;box-shadow:none}
+.bg-photo.has-adaptive-ink.l-gallery .caption .cap-date,.bg-photo.has-adaptive-ink.l-gallery .caption .ampm,.bg-photo.has-adaptive-ink.l-gallery .caption .cap-weather,.bg-photo.has-adaptive-ink.l-gallery .caption .cap-place{color:var(--tl-clock-ink)}
+.bg-photo.has-adaptive-ink.l-gallery.adaptive-tl-dark .caption .cap-date,.bg-photo.has-adaptive-ink.l-gallery.adaptive-tl-dark .caption .ampm,.bg-photo.has-adaptive-ink.l-gallery.adaptive-tl-dark .caption .cap-weather,.bg-photo.has-adaptive-ink.l-gallery.adaptive-tl-dark .caption .cap-place{text-shadow:var(--tl-shadow)}
+.bg-photo.has-adaptive-ink.l-gallery.adaptive-tl-dark .caption .cap-weather .ico,.bg-photo.has-adaptive-ink.l-gallery.adaptive-tl-dark .caption .cap-rule{filter:none;box-shadow:none}
 .greeting{position:absolute;right:122px;top:148px;font-size:30px;line-height:40px;font-weight:400;letter-spacing:.4px;color:var(--tr-ink,var(--ink));text-shadow:var(--tr-shadow,0 1px 3px rgba(0,0,0,.34));opacity:0;transition:opacity 160ms linear;pointer-events:none;white-space:nowrap}
 .greeting.is-on{opacity:.82}
 .bg-dark .greeting,.bg-light .greeting{text-shadow:none}
@@ -629,3 +639,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .bg-light.l-gallery .plate.on-sel{box-shadow:0 0 0 1px rgba(29,26,22,.38)}
 .bg-light.l-gallery .plate.on-lift{background:rgba(29,26,22,.1);box-shadow:0 0 0 2px rgba(29,26,22,.9)}
 .bg-light.l-gallery .tile .mark,.bg-dark.l-gallery .tile .mark{filter:none}
+/* A soft local shade behind the date, clock and weather keeps them legible over busy photographs. */
+.l-gallery .shade::after{content:"";position:absolute;left:0;top:0;width:960px;height:440px;background:radial-gradient(ellipse 600px 330px at 290px 200px,rgba(6,4,14,.36),rgba(6,4,14,.16) 55%,rgba(6,4,14,0) 100%);pointer-events:none}
+.bg-dark.l-gallery .shade::after,.bg-light.l-gallery .shade::after{display:none}
