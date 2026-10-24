@@ -148,5 +148,14 @@
     "tone": "light",
     "credit": "Cristina Gottardi",
     "source": "https://unsplash.com/photos/CSpjU6hYo_0"
+  },
+  {
+    "id": "shibuya",
+    "name": "Neon crossing",
+    "src": "assets/wallpapers/shibuya.jpg",
+    "thumb": "assets/wallpapers/shibuya-thumb.jpg",
+    "pos": "50% 50%",
+    "tone": "dark",
+    "credit": "Supplied by the repository owner (origin and licence not verified)"
   }
 ]

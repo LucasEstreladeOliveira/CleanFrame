@@ -657,7 +657,7 @@ try {
       await act('background.wallpaper');
       await current.waitForFunction(() => ShoreQA.state().view === 'wallpaper');
       const names = await current.locator('.wallpaper-choice .setting-name').allTextContents();
-      check(layout + ' Wallpaper shows all fifteen named choices at ' + width, same(names, walls.map(w => w.name)), names);
+      check(layout + ' Wallpaper shows every named choice at ' + width, same(names, walls.map(w => w.name)), names);
       check('Wallpaper entry keeps the existing Home frame ' + layout + '/' + width, same(await previewFrame(), frame));
       const first = await wallpaperListGeometry();
       check('Wallpaper list shows about six rows with contained labels ' + layout + '/' + width, first.fullyVisible.length >= 5 && first.fullyVisible.length <= 6 && first.partlyVisible.length <= 7 && first.clippedParts.length === 0 && first.fullyVisible.includes(first.focus) && (await call('where')).focusCount === 1, first);

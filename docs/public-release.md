@@ -10,7 +10,7 @@ Paid Pangram fonts, signing keys, account tokens, local device addresses, recove
 
 ## Asset review
 
-Each of the fifteen wallpaper pages was checked for author and Unsplash licence on 20 October 2026; see [asset sources](asset-sources.md). ABC and SBS icons now use documented MIT Custom Brand Icons sources. Font and icon licence texts are retained. Original code uses MIT; third-party assets keep their own terms in [third-party notices](../THIRD_PARTY_NOTICES.md).
+Each of the fifteen Unsplash wallpaper pages was checked for author and Unsplash licence on 20 October 2026; see [asset sources](asset-sources.md). ABC and SBS icons now use documented MIT Custom Brand Icons sources. Font and icon licence texts are retained. Original code uses MIT; third-party assets keep their own terms in [third-party notices](../THIRD_PARTY_NOTICES.md). The owner-supplied `shibuya` wallpaper has unverified rights (see [asset sources](asset-sources.md)); remove it, or confirm its rights, before any public download.
 
 ## Validation
 

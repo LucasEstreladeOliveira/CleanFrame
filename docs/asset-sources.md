@@ -20,6 +20,10 @@ Reviewed on 20 October 2026. Each of the fifteen linked Unsplash photo pages dis
 | Mint wave | MagicPattern | [Photo page](https://unsplash.com/photos/87PP9Zd7MNo) |
 | Alpine glow | Cristina Gottardi | [Photo page](https://unsplash.com/photos/CSpjU6hYo_0) |
 
+## Owner-supplied wallpaper
+
+`shibuya` (Neon crossing) is a composite image supplied by the repository owner: a night street photograph with added pixel-art figures. Its photographer, the origin of the figures and its licence were **not verified**, and it is not covered by the Unsplash review above. Do not include it in a public download or redistribution until the rights are confirmed. To remove it, delete `shibuya.jpg`, `shibuya-thumb.jpg` and `shibuya-panel.jpg` from `app/assets/wallpapers/`, the four `shibuya-*` files from `app/assets/materials/`, and its entries in `SOURCES.json` and `catalog.js`.
+
 The background preparation and material rendering steps are described in [asset generation](assets.md). Full-size original photos and research studies are outside the public source.
 
 ## Fonts and icons

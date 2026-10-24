@@ -226,5 +226,20 @@ window.CleanFrameWallpapers = [
     "listColumn": 0,
     "dockQuiet": false,
     "clockMist": false
+  },
+  {
+    "id": "shibuya",
+    "name": "Neon crossing",
+    "src": "assets/wallpapers/shibuya.jpg",
+    "thumb": "assets/wallpapers/shibuya-thumb.jpg",
+    "tone": "dark",
+    "ut": {
+      "tr": "mist",
+      "br": "mist"
+    },
+    "frostVeil": 0.3,
+    "listColumn": 0,
+    "dockQuiet": true,
+    "clockMist": true
   }
 ];
