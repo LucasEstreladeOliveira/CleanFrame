@@ -8,6 +8,9 @@ class Control {
  const string Target="nClrkHome1.FrameHome";
  static readonly string[] Keys={"db/appfw/home_appid","db/appfw/startup_appid","db/appfw/booting_appid_backup","db/first_screen/type"};
  const string AutoKey="db/menu/smart_hub/ontvsetting/auto_start";
+ // query runs on any firmware and reports it; apply and restore need a firmware listed here.
+ // Add a firmware only after reviewing inspect and query output from that TV.
+ static readonly string[] ApplyFirmware={"Version=T-PTMDUABC-0090-2130.0;"};
  [DllImport("libbundle.so.0")] static extern IntPtr bundle_create();
  [DllImport("libbundle.so.0")] static extern void bundle_free(IntPtr b);
  [DllImport("libaul.so.0")] static extern int aul_svc_set_operation(IntPtr b,string op);
@@ -32,8 +35,11 @@ class Control {
  static int Main(string[] args){
   try{
    if(IntPtr.Size!=4||getuid()!=901)throw new Exception("Expected 32-bit SDK user, no root");
-   var info=File.ReadAllText("/etc/prd_info.ini");if(!info.Contains("Version=T-PTMDUABC-0090-2130.0;"))throw new Exception("Unexpected firmware");
-   if(args.Length==1&&args[0]=="query"){Console.WriteLine("CLEANFRAME_HOME_JSON="+JsonSerializer.Serialize(Query()));return 0;}
+   var info=File.ReadAllText("/etc/prd_info.ini");var vi=info.IndexOf("Version=");var ve=vi<0?-1:info.IndexOf(';',vi);
+   var firmware=vi<0?"unknown":info.Substring(vi,ve>vi?ve-vi+1:Math.Min(80,info.Length-vi)).Trim();
+   var approved=Array.Exists(ApplyFirmware,v=>info.Contains(v));
+   if(args.Length==1&&args[0]=="query"){Console.WriteLine("CLEANFRAME_FIRMWARE="+firmware+" APPLY_APPROVED="+approved);Console.WriteLine("CLEANFRAME_HOME_JSON="+JsonSerializer.Serialize(Query()));return 0;}
+   if(!approved)throw new Exception("Firmware "+firmware+" is not approved for apply or restore");
    if(args.Length!=2||(args[0]!="apply"&&args[0]!="restore"))throw new Exception("Use query, apply SNAPSHOT, or restore SNAPSHOT");
    var original=JsonSerializer.Deserialize<Snapshot>(File.ReadAllText(args[1]));CheckSnapshot(original);var before=Query();
    if(before.Home!=original.Home&&before.Home!=Target)throw new Exception("Home changed since snapshot; stop for review");

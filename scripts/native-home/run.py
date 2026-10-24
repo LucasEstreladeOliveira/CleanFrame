@@ -5,7 +5,16 @@ mode=sys.argv[1] if len(sys.argv)>1 else 'query'
 if mode not in ['query','apply','restore','inspect']:raise SystemExit('Unknown action')
 host=json.loads((r/'.local/device.json').read_text())['host'];ipaddress.ip_address(host)
 with urllib.request.urlopen('http://'+host+':8001/api/v2/',timeout=4) as response: info=json.load(response)
-if info.get('device',{}).get('modelName')!='QA55LS03DAWXXY':raise SystemExit('Model guard failed; nothing staged.')
+# Read-only modes may run on any model listed here. apply and restore stay limited to models whose
+# query/inspect output the owner has reviewed on the real TV; add yours to APPLY_MODELS only then.
+REFERENCE_MODEL='QA55LS03DAWXXY'
+READ_ONLY_MODELS={REFERENCE_MODEL,'QN55LS03FAGXZD'}
+APPLY_MODELS={REFERENCE_MODEL}
+model=info.get('device',{}).get('modelName')
+if mode in ['query','inspect']:
+    if model not in READ_ONLY_MODELS:raise SystemExit('Model guard failed for '+repr(model)+'; nothing staged.')
+elif model not in APPLY_MODELS:
+    raise SystemExit('Model '+repr(model)+' is not approved for '+mode+'; nothing staged. Run inspect and query, review the output, then add the model to APPLY_MODELS.')
 sdb=str(r/'.local/tizen-sdk/tools/sdb');serial=host+':26101'
 def run(args,timeout=12):
  p=subprocess.run([sdb,*args],capture_output=True,text=True,timeout=timeout)
