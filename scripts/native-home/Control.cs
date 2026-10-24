@@ -10,7 +10,7 @@ class Control {
  const string AutoKey="db/menu/smart_hub/ontvsetting/auto_start";
  // query runs on any firmware and reports it; apply and restore need a firmware listed here.
  // Add a firmware only after reviewing inspect and query output from that TV.
- static readonly string[] ApplyFirmware={"Version=T-PTMDUABC-0090-2130.0;"};
+ static readonly string[] ApplyFirmware={"Version=T-PTMDUABC-0090-2130.0;","Version=T-PTMFUABC-0090-1301.0;"};
  [DllImport("libbundle.so.0")] static extern IntPtr bundle_create();
  [DllImport("libbundle.so.0")] static extern void bundle_free(IntPtr b);
  [DllImport("libaul.so.0")] static extern int aul_svc_set_operation(IntPtr b,string op);
